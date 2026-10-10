@@ -285,7 +285,8 @@
         const key = teamKey(t);
         if (seen.has(key)) continue;
         seen.add(key);
-        const o = new Option(t.name, key);
+        // Frauenteams heißen wie die Männer – im geschlossenen Feld sonst nicht zu unterscheiden
+        const o = new Option(t.leagueId === 9676 ? `${t.name} (Frauen)` : t.name, key);
         o.team = plainTeam(t);
         og.append(o);
       }
@@ -417,6 +418,9 @@
     $('testNtfy').disabled = !s.forward.ntfyTopic;
     $('testDiscord').disabled = !s.forward.discordWebhook;
     $('onlyFavorite').checked = !!s.forward.onlyFavorite;
+    // Ohne Lieblingsverein würde "nur Lieblingsverein" alles blockieren
+    $('onlyFavorite').disabled = !s.favorite;
+    $('noFavoriteFwd').hidden = !!s.favorite;
     $('discordStatus').checked = s.discordStatus !== false;
 
     // Allgemein

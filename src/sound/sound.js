@@ -3,7 +3,7 @@
 // Jede Synthese bekommt einen beliebigen BaseAudioContext und einen Ziel-Knoten: derselbe Code
 // spielt live und lässt sich offline (OfflineAudioContext) nachmessen.
 (function (root) {
-  const NAMES = ['pfiff', 'anpfiff', 'halbzeitpfiff', 'abpfiff', 'hupe', 'glocke', 'jubel', 'datei'];
+  const NAMES = ['pfiff', 'anpfiff', 'halbzeitpfiff', 'abpfiff', 'rotpfiff', 'hupe', 'glocke', 'jubel', 'datei'];
   const MAX_FILE = 30; // eigene Dateien höchstens so viele Sekunden, dann ausblenden
   const MAX_LEN = 7; // kein erzeugter Ton (samt Hall) ist länger
 
@@ -278,6 +278,8 @@
     anpfiff: [[0, 0.9]],
     halbzeitpfiff: [[0, 0.45], [0.62, 0.75]],
     abpfiff: [[0, 0.3], [0.44, 0.3], [0.88, 1.3]],
+    // Rote Karte: drei kurze, scharfe Stöße – klingt anders als der Tor-Doppelpfiff
+    rotpfiff: [[0, 0.1], [0.17, 0.1], [0.34, 0.1]],
   };
 
   function whistle(ctx, out, t, rand, pattern) {
@@ -513,6 +515,7 @@
     anpfiff: (ctx, out, t, rand) => whistle(ctx, out, t, rand, WHISTLES.anpfiff),
     halbzeitpfiff: (ctx, out, t, rand) => whistle(ctx, out, t, rand, WHISTLES.halbzeitpfiff),
     abpfiff: (ctx, out, t, rand) => whistle(ctx, out, t, rand, WHISTLES.abpfiff),
+    rotpfiff: (ctx, out, t, rand) => whistle(ctx, out, t, rand, WHISTLES.rotpfiff),
     hupe: horn,
     glocke: bell,
     jubel: crowd,

@@ -82,6 +82,8 @@ function prepare(msg) {
 function md(s) {
   return s
     .replace(/([\\*_~`|])/g, '\\$1')
+    // "[Text](Adresse)" wäre ein getarnter Link – unsichtbares Zeichen zwischen ] und ( bricht das Muster
+    .replace(/\]\(/g, ']​(')
     .replace(/^([#>-])/gm, '\\$1')
     .replace(/^(\d+)\. /gm, '$1\\. ');
 }
@@ -196,7 +198,8 @@ async function sendDiscord(webhookUrl, msg) {
     const m = prepare(msg);
     if (!m) return fail('Keine Nachricht zum Senden.');
     // allowed_mentions leer: niemand wird je angepingt, auch nicht durch @everyone im Text
-    const body = { username: 'Tor-Alarm', content: discordContent(m), allowed_mentions: { parse: [] } };
+    // flags 4 (SUPPRESS_EMBEDS): keine Vorschaukarten für Adressen, die vielleicht in Namen stecken
+    const body = { username: 'Tor-Alarm', content: discordContent(m), allowed_mentions: { parse: [] }, flags: 4 };
     let r = await post(url, body);
     if (!r.failed && r.status === 429) {
       // Einmal nach der verlangten Pause erneut versuchen

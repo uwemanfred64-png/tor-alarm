@@ -391,10 +391,11 @@ function redcardText(c, ctx) {
   const { team, key } = ctx;
   const player = person(c.player);
   const v = { P: player, M: formatMinute(c.minute), ...teamVars('T', team) };
-  const headline = team ? `Rote Karte für ${v.T_akk}` : 'Rote Karte';
+  const word = c.yellowRed ? 'Gelb-Rot' : 'Rote Karte';
+  const headline = team ? `${word} für ${v.T_akk}` : word;
   const late = stoppage(c.minute);
   let s;
-  // "fliegt vom Platz" passt auch bei Gelb-Rot – die Daten unterscheiden das hier nicht.
+  // "fliegt vom Platz" passt für Rot und Gelb-Rot gleichermaßen.
   if (player) {
     if (late) {
       // Die genaue Minute (90.+4) zeigt jedes Design ohnehin an

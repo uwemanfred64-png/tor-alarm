@@ -124,7 +124,7 @@
       case 'fulltime':
         return 'Abpfiff';
       case 'redcard':
-        return fuer('Rote Karte');
+        return fuer(c.yellowRed ? 'Gelb-Rot' : 'Rote Karte');
       case 'conference':
         return 'Alle Spiele';
       default:
@@ -164,7 +164,7 @@
       case 'goal':
         return { text: 'Tor', red: !c.conceded };
       case 'disallowed':
-        return { text: 'VAR' };
+        return null; // "Kein Tor für …" steht schon in der Überschrift; warum, wissen wir nicht
       case 'missed':
         return null; // Überschrift und Liste sagen es schon, links steht nur der Spielstand-Zeitpunkt
       case 'redcard':

@@ -6,7 +6,7 @@ const { BrowserWindow, screen, ipcMain, shell } = require('electron');
 const path = require('path');
 
 // Startgröße, bis das Design seine echte Größe meldet
-const DEFAULT_SIZE = { tafel: [420, 158], videotext: [420, 176], ticker: [400, 140] };
+const DEFAULT_SIZE = { tafel: [420, 158], videotext: [420, 184], ticker: [400, 140] };
 const MARGIN = 8;
 const GAP = 2;
 const MAX_VISIBLE = 4;
@@ -16,6 +16,8 @@ const READY_FALLBACK = 2_500; // meldet sich ein Design nicht, wird das Fenster 
 let defaults = { position: 'unten-rechts', size: 100 };
 const visible = []; // unterstes (bzw. oberstes bei "oben") zuerst
 const queue = [];
+// Zuletzt gemeldete echte Höhe je Design und Kartenart (ohne Zoom) – genauer als DEFAULT_SIZE
+const knownHeight = new Map();
 
 function configure({ position, size }) {
   defaults = { position: position || defaults.position, size: size || defaults.size };
@@ -24,6 +26,24 @@ function configure({ position, size }) {
 
 const zoomOf = (h) => (h.size || defaults.size) / 100;
 const positionOf = (h) => h.position || defaults.position;
+const kindOf = (h) => `${h.card.design}:${h.card.type}`;
+
+function expectedHeight(h) {
+  const [, h0] = DEFAULT_SIZE[h.card.design] || DEFAULT_SIZE.tafel;
+  return Math.round((knownHeight.get(kindOf(h)) || h0) * zoomOf(h));
+}
+
+// Passt noch ein Popup an seine Ecke? Auf kleinen Bildschirmen (1366×768, 150 % Skalierung) sind
+// vier Karten übereinander zu hoch – dann wartet die nächste, bis oben Platz ist.
+function fits(h) {
+  const pos = positionOf(h);
+  const same = visible.filter((v) => positionOf(v) === pos);
+  if (!same.length) return true; // eine leere Ecke nimmt immer eins
+  if (visible.length >= MAX_VISIBLE) return false;
+  const { workArea } = screen.getPrimaryDisplay();
+  const used = same.reduce((sum, v) => sum + v.winSize[1] + GAP, 0);
+  return used + expectedHeight(h) <= workArea.height - 2 * MARGIN;
+}
 
 function restack() {
   const { workArea } = screen.getPrimaryDisplay();
@@ -37,7 +57,9 @@ function restack() {
     const right = pos.endsWith('rechts');
     const bottom = pos.startsWith('unten');
     const x = right ? workArea.x + workArea.width - w - MARGIN : workArea.x + MARGIN;
-    const y = bottom ? workArea.y + workArea.height - MARGIN - used - ht : workArea.y + MARGIN + used;
+    let y = bottom ? workArea.y + workArea.height - MARGIN - used - ht : workArea.y + MARGIN + used;
+    // War eine Karte größer als erwartet, lieber überlappen als aus dem Bild rutschen
+    y = Math.min(Math.max(y, workArea.y + MARGIN), workArea.y + workArea.height - MARGIN - ht);
     h.win.setBounds({ x: Math.round(x), y: Math.round(y), width: w, height: ht }, false);
     offsets[pos] = used + ht + GAP;
   }
@@ -55,7 +77,9 @@ function showPopup(card, opts = {}) {
     position: opts.position,
     size: opts.size,
   };
-  if (visible.length < MAX_VISIBLE) open(handle);
+  // Wartet an dieser Ecke schon etwas, bleibt die Reihenfolge erhalten
+  const waiting = queue.some((q) => positionOf(q) === positionOf(handle));
+  if (!waiting && fits(handle)) open(handle);
   else queue.push(handle);
   return handle;
 }
@@ -76,8 +100,8 @@ function reveal(handle) {
 
 function open(handle) {
   const zoom = zoomOf(handle);
-  const [w0, h0] = DEFAULT_SIZE[handle.card.design] || DEFAULT_SIZE.tafel;
-  handle.winSize = [Math.round(w0 * zoom), Math.round(h0 * zoom)];
+  const [w0] = DEFAULT_SIZE[handle.card.design] || DEFAULT_SIZE.tafel;
+  handle.winSize = [Math.round(w0 * zoom), expectedHeight(handle)];
 
   const win = new BrowserWindow({
     width: handle.winSize[0],
@@ -132,16 +156,30 @@ function open(handle) {
     handle.closed = true;
     const i = visible.indexOf(handle);
     if (i >= 0) visible.splice(i, 1);
-    while (visible.length < MAX_VISIBLE && queue.length) {
-      const next = queue.shift();
-      if (Date.now() - next.queuedAt > QUEUE_MAX_AGE) {
-        next.closed = true; // zu alt, nicht mehr zeigen
-        continue;
-      }
-      open(next);
-    }
+    drainQueue();
     restack();
   });
+}
+
+// Wartende Popups nachrücken lassen, solange Platz ist – je Ecke in ihrer Reihenfolge
+function drainQueue() {
+  const blocked = new Set(); // Ecken, an denen eine Karte noch auf Platz wartet
+  for (let i = 0; i < queue.length; ) {
+    const next = queue[i];
+    if (Date.now() - next.queuedAt > QUEUE_MAX_AGE) {
+      queue.splice(i, 1);
+      next.closed = true; // zu alt, nicht mehr zeigen
+      continue;
+    }
+    const pos = positionOf(next);
+    if (blocked.has(pos) || !fits(next)) {
+      blocked.add(pos);
+      i++;
+      continue;
+    }
+    queue.splice(i, 1);
+    open(next);
+  }
 }
 
 function handleFor(sender) {
@@ -155,6 +193,7 @@ ipcMain.on('popup:ready', (e, size) => {
   const w = Number(size && size.width);
   const ht = Number(size && size.height);
   if (w > 0 && ht > 0) {
+    knownHeight.set(kindOf(h), ht);
     const { workArea } = screen.getPrimaryDisplay();
     h.winSize = [
       Math.min(Math.round(w * zoom), workArea.width - 2 * MARGIN),
@@ -163,6 +202,7 @@ ipcMain.on('popup:ready', (e, size) => {
   }
   if (h.shown) restack();
   else reveal(h);
+  drainQueue(); // war die Karte kleiner als erwartet, passt jetzt vielleicht noch eine
 });
 
 ipcMain.on('popup:close', (e) => {
@@ -177,9 +217,21 @@ ipcMain.on('popup:open', (e, url) => {
   h.win.close();
 });
 
+// Ein bestimmtes Popup schließen – auch wenn es noch in der Warteschlange steht
+function closePopup(handle) {
+  if (!handle || handle.closed) return;
+  const qi = queue.indexOf(handle);
+  if (qi >= 0) {
+    queue.splice(qi, 1);
+    handle.closed = true;
+    return;
+  }
+  if (handle.win && !handle.win.isDestroyed()) handle.win.close();
+}
+
 function closeAll() {
   queue.splice(0).forEach((h) => (h.closed = true));
   visible.slice().forEach((h) => h.win && !h.win.isDestroyed() && h.win.destroy());
 }
 
-module.exports = { configure, showPopup, updatePopup, closeAll };
+module.exports = { configure, showPopup, updatePopup, closePopup, closeAll };

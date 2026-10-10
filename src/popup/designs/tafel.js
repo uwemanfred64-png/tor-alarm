@@ -96,8 +96,8 @@
       if (c.conceded) return null;
       return c.favorite ? { word: 'TOOOR!', len: 3500, reveal: true } : { word: 'TOR!', len: 2300 };
     }
-    if (c.type === 'disallowed') return { word: 'VAR', len: 2300 };
-    if (c.type === 'redcard') return { word: 'ROT', len: 1800, fast: true };
+    // Aberkannt: kein Intro – warum (VAR, Abseits, Korrektur) steht nicht in den Daten
+    if (c.type === 'redcard') return { word: c.yellowRed ? 'GELB-ROT' : 'ROT', len: 1800, fast: true };
     return null;
   }
 
@@ -120,8 +120,10 @@
         return 'HALBZEIT';
       case 'fulltime':
         return t < FULLTIME_SWITCH ? 'ABPFIFF' : 'ENDSTAND';
-      case 'redcard':
-        return team ? `ROTE KARTE ${team}` : 'ROTE KARTE';
+      case 'redcard': {
+        const w = c.yellowRed ? 'GELB-ROT' : 'ROTE KARTE';
+        return team ? `${w} ${team}` : w;
+      }
       default:
         return str(c.text && c.text.headline);
     }
@@ -221,7 +223,9 @@
   let optsSince = 0;
 
   function drawIntro(intro, t) {
-    const scale = 4;
+    // So groß wie möglich (höchstens 4), aber nie breiter als die Tafel – "GELB-ROT" braucht kleiner
+    let scale = 4;
+    while (scale > 1 && measure(intro.word, scale) > COLS - 2) scale -= 1;
     const x = Math.round((COLS - measure(intro.word, scale)) / 2);
     const y = Math.round((ROWS - 7 * scale) / 2);
     if (intro.reveal) {

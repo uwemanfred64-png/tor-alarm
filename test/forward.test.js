@@ -215,7 +215,16 @@ test('Discord: Nachricht mit fettem Titel, Link ohne Vorschau, niemand wird ange
     content:
       '**Tor für Augsburg – 2:1**\nAugsburg 2:1 Bayern (78.)\nRobin Fellhauer verwandelt den Elfmeter zum 2:1.\n<https://www.fotmob.com/de/match/5881179>',
     allowed_mentions: { parse: [] },
+    flags: 4, // keine Vorschaukarten
   });
+});
+
+test('Discord: getarnte Links aus Namen werden unschädlich gemacht', async () => {
+  const calls = mockFetch(reply(204, null));
+  await forward.sendDiscord(HOOK, { title: 'Tor', message: 'Spieler [Klick mich](https://boese.example) trifft', click: null });
+  const content = calls[0].body.content;
+  assert.ok(!content.includes('](h'), content);
+  assert.ok(content.includes('[Klick mich]​(https://boese.example)'));
 });
 
 test('Discord: Markdown in Namen wird entschärft, Länge höchstens 2000', async () => {

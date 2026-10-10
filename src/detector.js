@@ -8,6 +8,13 @@
 //    manchmal kurz einen veralteten Stand aus dem Cache – das soll keinen Alarm auslösen.
 //  - silentDrops (OpenLigaDB): Rückgänge sind dort fast immer Verzögerung, kein VAR. Der Stand wird
 //    nach der Bestätigung nur still angeglichen, ohne Meldung.
+//  - Unsinnige Werte (keine ganze Zahl von 0 bis 30) werden ignoriert. Springt ein Stand auf einen
+//    Schlag um mehr als 3 Tore, muss der nächste Abruf das bestätigen – dann kommt EIN Ereignis
+//    'jump' (Sammelmeldung) statt einer Tor-Lawine.
+
+const MAX_GOALS = 30;
+const MAX_STEP = 3;
+const plausible = (v) => Number.isInteger(v) && v >= 0 && v <= MAX_GOALS;
 
 class GoalDetector {
   constructor() {
@@ -23,27 +30,47 @@ class GoalDetector {
   }
 
   // Startstand von außen vorgeben (z. B. beim Wechsel der Datenquelle).
+  // own = was diese Quelle selbst schon geliefert hat (beim Seed noch nichts).
   seed(id, score) {
-    this.state.set(id, { score: [score[0] | 0, score[1] | 0], drop: [null, null] });
+    this.state.set(id, { score: [score[0] | 0, score[1] | 0], drop: [null, null], jump: null, own: [0, 0] });
     this.primed = true;
   }
 
   update(matches, { dropConfirm = 2, silentDrops = false, now = Date.now() } = {}) {
     const events = [];
     for (const m of matches) {
-      const next = [m.homeScore | 0, m.awayScore | 0];
+      // Kaputte Werte: dieses Spiel in diesem Abruf auslassen, alter Stand bleibt
+      if (!plausible(m.homeScore) || !plausible(m.awayScore)) continue;
+      const next = [m.homeScore, m.awayScore];
       const prev = this.state.get(m.id);
 
       if (!prev) {
         // Spiel taucht neu auf: Stand nur merken.
-        this.state.set(m.id, { score: next, drop: [null, null] });
+        this.state.set(m.id, { score: next, drop: [null, null], jump: null, own: next.slice() });
         continue;
       }
+      if (!prev.own) prev.own = [0, 0];
 
       const before = prev.score.slice();
       const cur = prev.score.slice();
       const sides = ['home', 'away'];
       const dropped = [];
+
+      // 0) Riesensprung (> 3 Tore auf einer Seite): erst beim zweiten gleichen Abruf glauben
+      if (next[0] - before[0] > MAX_STEP || next[1] - before[1] > MAX_STEP) {
+        const j = prev.jump;
+        if (j && j.to[0] === next[0] && j.to[1] === next[1]) {
+          prev.jump = null;
+          prev.drop = [null, null];
+          prev.score = next.slice();
+          prev.own = [Math.max(prev.own[0], next[0]), Math.max(prev.own[1], next[1])];
+          events.push({ type: 'jump', match: m, prev: before, score: next.slice() });
+        } else {
+          prev.jump = { to: next.slice() };
+        }
+        continue;
+      }
+      prev.jump = null;
 
       // 1) bestätigte Rückgänge
       for (let i = 0; i < 2; i++) {
@@ -57,7 +84,10 @@ class GoalDetector {
         if (prev.drop[i].count >= dropConfirm) {
           cur[i] = next[i];
           prev.drop[i] = null;
-          if (!silentDrops) dropped.push(i);
+          // Still bleibt ein Rückgang nur, wenn die Quelle den höheren Stand selbst nie geliefert hat
+          // (z. B. OpenLigaDB hinkt dem übernommenen FotMob-Stand hinterher). Hat sie ihn selbst
+          // gemeldet und nimmt ihn zurück, ist es eine echte Rücknahme.
+          if (!silentDrops || next[i] < prev.own[i]) dropped.push(i);
         }
       }
       for (const i of dropped) events.push({ type: 'disallowed', side: sides[i], match: m, prev: before.slice(), score: cur.slice() });
@@ -70,6 +100,7 @@ class GoalDetector {
         }
       }
       prev.score = cur;
+      prev.own = [Math.max(prev.own[0], next[0]), Math.max(prev.own[1], next[1])];
     }
 
     this.lastUpdate = now;

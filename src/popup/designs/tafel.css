@@ -30,6 +30,8 @@
 }
 .tafel-foot {
   min-width: 0;
+  /* Ohne eigene Zeilenhöhe schneidet overflow die Unterlängen ab ("Bundesliqa") */
+  line-height: 15px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

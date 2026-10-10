@@ -264,7 +264,8 @@ function parseOpenLiga(list, now = new Date(), competition = BUNDESLIGA_ID) {
       name: short(t.teamName, t.shortName),
       code: code(t.teamName, t.shortName),
       full: t.teamName,
-      logo: t.teamIconUrl || null,
+      // Nur echte https-Bilder übernehmen (die Adresse kommt ungeprüft aus OpenLigaDB)
+      logo: typeof t.teamIconUrl === 'string' && /^https:\/\//i.test(t.teamIconUrl) ? t.teamIconUrl : null,
     });
     return {
       id: `ol-${m.matchID}`,

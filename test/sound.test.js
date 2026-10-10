@@ -150,7 +150,7 @@ const SYNTH = sound.NAMES.filter((n) => n !== 'datei');
 // ------------------------------------------------------------ Tests
 
 test('alle Namen aus dem Bauplan sind da', () => {
-  assert.deepStrictEqual(sound.NAMES, ['pfiff', 'anpfiff', 'halbzeitpfiff', 'abpfiff', 'hupe', 'glocke', 'jubel', 'datei']);
+  assert.deepStrictEqual(sound.NAMES, ['pfiff', 'anpfiff', 'halbzeitpfiff', 'abpfiff', 'rotpfiff', 'hupe', 'glocke', 'jubel', 'datei']);
 });
 
 test('Lautstärke: linear, 70 = 1, 0 = stumm, Grenzen', () => {
@@ -236,6 +236,8 @@ test('Pfiffe: Anzahl und Länge wie beim Schiri', () => {
   assert.deepStrictEqual(blasts('anpfiff'), [1.02]);
   assert.deepStrictEqual(blasts('halbzeitpfiff'), [0.57, 0.87]);
   assert.deepStrictEqual(blasts('abpfiff'), [0.42, 0.42, 1.42]);
+  // Rote Karte: drei kurze Stöße, klar anders als der Tor-Doppelpfiff
+  assert.deepStrictEqual(blasts('rotpfiff'), [0.22, 0.22, 0.22]);
 });
 
 test('unbekannter Name beim Bauen wirft', () => {

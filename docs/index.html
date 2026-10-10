@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'self'; script-src 'self'; base-uri 'none'; form-action 'none'">
+<title>Tor-Alarm – jedes Tor sofort auf dem Desktop</title>
+<meta name="description" content="Kleines kostenloses Windows-Programm für Fußballfans: meldet jedes Tor aus Bundesliga, 2. und 3. Liga, Frauen-Bundesliga, DFB-Pokal und Europapokal sofort auf dem Desktop – als Stadion-Anzeigetafel, Videotext oder Liveticker.">
+<link rel="canonical" href="https://uwemanfred64-png.github.io/tor-alarm/">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="256x256" href="favicon.png">
+<link rel="apple-touch-icon" href="icon-512.png">
+<meta name="theme-color" content="#ffb52e">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Tor-Alarm">
+<meta property="og:locale" content="de_DE">
+<meta property="og:url" content="https://uwemanfred64-png.github.io/tor-alarm/">
+<meta property="og:title" content="Tor-Alarm – jedes Tor sofort auf dem Desktop">
+<meta property="og:description" content="Kostenloses Windows-Programm: meldet jedes Tor aus Bundesliga, 2. und 3. Liga, Frauen-Bundesliga, DFB-Pokal und Europapokal sofort auf dem Desktop. Ohne Werbung, ohne Konto.">
+<meta property="og:image" content="https://uwemanfred64-png.github.io/tor-alarm/og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="LED-Anzeigetafel von Tor-Alarm: FCA 2:1 FCB, Tor für Augsburg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Tor-Alarm – jedes Tor sofort auf dem Desktop">
+<meta name="twitter:description" content="Kostenloses Windows-Programm: meldet jedes Tor aus Bundesliga, 2. und 3. Liga, Frauen-Bundesliga, DFB-Pokal und Europapokal sofort auf dem Desktop. Ohne Werbung, ohne Konto.">
+<meta name="twitter:image" content="https://uwemanfred64-png.github.io/tor-alarm/og.png">
+<meta name="twitter:image:alt" content="LED-Anzeigetafel von Tor-Alarm: FCA 2:1 FCB, Tor für Augsburg">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="stadion">
+  <div class="wrap kopf">
+    <h1 class="marke"><img src="favicon.png" width="28" height="28" alt="">Tor-Alarm</h1>
+    <nav class="nav" aria-label="Auf dieser Seite">
+      <a class="nav-download" href="#download">Download</a>
+      <a href="#fragen">Fragen</a>
+      <a href="https://github.com/uwemanfred64-png/tor-alarm">Quellcode</a>
+    </nav>
+  </div>
+
+  <div class="wrap anzeige">
+    <div class="tafel-platz">
+      <div id="tafel" class="tafel-halter" role="img" aria-label="Anzeigetafel: FCA 2:1 FCB – Tor für Augsburg, 78. Minute Robin Fellhauer, Elfmeter">
+        <noscript><img class="tafel-ersatz" src="img/tafel.png" width="420" height="158" alt=""></noscript>
+      </div>
+      <div class="tafel-unter">
+        <p>Die echte Tafel aus dem Programm – gleicher Code, gleiche Punktschrift.</p>
+        <button type="button" class="pause" id="pause">Anhalten</button>
+      </div>
+    </div>
+
+    <div class="szenen" role="group" aria-label="Was die Tafel zeigt">
+      <button type="button" class="szene" data-szene="tor" aria-pressed="true">Tor <small>mit Torschütze und Minute</small></button>
+      <button type="button" class="szene" data-szene="konferenz" aria-pressed="false">Konferenz <small><kbd>Strg</kbd>+<kbd>Alt</kbd>+<kbd>T</kbd> zeigt alle Spiele</small></button>
+      <button type="button" class="szene" data-szene="verein" aria-pressed="false">Lieblingsverein <small>„TOOOR!“ und eigener Sound</small></button>
+      <button type="button" class="szene" data-szene="rot" aria-pressed="false">Rote Karte <small>mit Spieler und Minute</small></button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section class="wrap anstoss" id="download" aria-labelledby="los">
+    <div class="anstoss-links">
+      <p class="lead">Tor-Alarm ist ein kleines Windows-Programm, das dir jedes Tor sofort auf dem Desktop meldet – mit Spielstand und Torschütze, ohne dass nebenbei ein Liveticker offen sein muss.</p>
+      <a class="knopf" href="https://github.com/uwemanfred64-png/tor-alarm/releases/download/v1.1.0/Tor-Alarm-Setup-1.1.0.exe">
+        Tor-Alarm herunterladen
+        <small>Tor-Alarm-Setup-1.1.0.exe, rund 90&nbsp;MB</small>
+      </a>
+      <p class="kein-windows" id="kein-windows" hidden>Sieht so aus, als wärst du gerade nicht an einem Windows-PC. Die Datei läuft nur unter Windows 10 und 11 – also lieber später am Rechner herunterladen.</p>
+      <p class="fakten"><strong>Nur für Windows 10 und 11.</strong> Kostenlos, ohne Werbung, ohne Konto.</p>
+      <p class="nebenbei">Was neu ist, steht auf der <a href="https://github.com/uwemanfred64-png/tor-alarm/releases/latest">Release-Seite bei GitHub</a>.</p>
+    </div>
+
+    <div class="anstoss-rechts">
+      <h2 id="los">So geht’s los</h2>
+      <ol class="schritte" role="list">
+        <li><strong>Herunterladen und ausführen.</strong> Die Setup-Datei öffnen und durchklicken.</li>
+        <li><strong>Windows warnt?</strong> Tor-Alarm ist nicht kostenpflichtig signiert. Deshalb fragt eventuell schon der Browser nach (dann die Datei behalten), und Windows meldet beim Öffnen „Der Computer wurde durch Windows geschützt“. Dann auf <b class="ui">Weitere Informationen</b> und danach auf <b class="ui">Trotzdem ausführen</b> klicken.</li>
+        <li><strong>Unten rechts schauen.</strong> Tor-Alarm sitzt jetzt im Infobereich der Taskleiste: die kleine Tafel mit „1:0“ <img class="tray" src="favicon-16.png" srcset="favicon-16.png 1x, favicon-32.png 2x, favicon.png 3x" width="16" height="16" alt="">, eventuell hinter dem Pfeil&nbsp;^. Rechtsklick öffnet das Menü (dort gibt’s auch „Test-Tor zeigen“), Doppelklick die Einstellungen. Beim ersten Start kommt zur Probe gleich ein Tor.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="wrap looks" id="looks" aria-labelledby="looks-titel">
+    <h2 id="looks-titel">Vier Looks</h2>
+    <p class="vorspann">Wie die Meldung aussieht, suchst du dir aus. Die Bilder hier sind echte Bildschirmfotos aus dem Programm.</p>
+
+    <div class="look">
+      <div class="look-text">
+        <h3><span class="nr">1</span> Anzeigetafel</h3>
+        <p>Leuchtpunkte wie die Tafel im Stadion, Punkt für Punkt gezeichnet – genau die von oben. Gibt’s in Bernstein, Rot, Grün und Weiß.</p>
+      </div>
+      <div class="bilder">
+        <figure class="popup b404">
+          <img src="img/tafel.png" width="420" height="158" loading="lazy" alt="Anzeigetafel in Bernstein: FCA, leere Stelle, :1 FCB, darunter Tor für Augsburg, 78. Minute Robin Fellhauer">
+          <figcaption>Tor für Augsburg. Die 2 blinkt gerade – so sieht man, wer getroffen hat.</figcaption>
+        </figure>
+        <figure class="popup b404">
+          <img src="img/tafel-rot.png" width="420" height="158" loading="lazy" alt="Anzeigetafel: FCA 2:1 FCB, Rote Karte Bayern, 67. Minute Dayot Upamecano">
+          <figcaption>Rote Karte, mit Spieler und Minute.</figcaption>
+        </figure>
+        <figure class="popup b404">
+          <img src="img/tafel-gruen.png" width="420" height="158" loading="lazy" alt="Dieselbe Anzeigetafel mit grünen Leuchtpunkten">
+          <figcaption>Dasselbe in Grün.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="look">
+      <div class="look-text">
+        <h3><span class="nr">2</span> Videotext</h3>
+        <p>Wie Seite 250 im Fernsehen, mit laufender Uhr oben rechts. Für alle, die früher samstags vor dem Videotext saßen.</p>
+      </div>
+      <div class="bilder">
+        <figure class="popup b404">
+          <img src="img/videotext.png" width="420" height="184" loading="lazy" alt="Videotext-Seite 250, Bundesliga: Augsburg – Bayern 2:1, 78. Robin Fellhauer (Elfmeter), Robin Fellhauer trifft vom Punkt zum 2:1">
+          <figcaption>Tor auf Seite 250.</figcaption>
+        </figure>
+        <figure class="popup b404">
+          <img src="img/videotext-konferenz.png" width="420" height="204" loading="lazy" alt="Videotext-Seite 252 mit fünf Bundesliga-Spielen und ihren Spielständen">
+          <figcaption>Die Konferenz auf Seite 252.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="look">
+      <div class="look-text">
+        <h3><span class="nr">3</span> Liveticker</h3>
+        <p>Ein Eintrag wie im Liveticker einer Sportseite, mit Vereinswappen. Tore deines Vereins kommen in Rot.</p>
+      </div>
+      <div class="bilder">
+        <div class="stapel">
+          <figure class="popup b384">
+            <img src="img/ticker.png" width="400" height="114" loading="lazy" alt="Liveticker-Eintrag: 78. Minute, Tor für Augsburg, Augsburg – Bayern 2:1, Robin Fellhauer trifft vom Punkt zum 2:1">
+            <figcaption>Ein Tor.</figcaption>
+          </figure>
+          <figure class="popup b384">
+            <img src="img/ticker-lieblingsverein.png" width="400" height="114" loading="lazy" alt="Derselbe Eintrag in Rot mit der Überschrift TOOOR für Augsburg!">
+            <figcaption>Dasselbe Tor, wenn Augsburg dein Verein ist.</figcaption>
+          </figure>
+        </div>
+        <figure class="popup b384">
+          <img src="img/ticker-konferenz.png" width="400" height="188" loading="lazy" alt="Liste Alle Spiele mit fünf Bundesliga-Partien, Spielständen und Minuten">
+          <figcaption>Alle Spiele auf einen Blick.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="look">
+      <div class="look-text">
+        <h3><span class="nr">4</span> Windows-Benachrichtigung</h3>
+        <p>Die kennst du: die ganz normale Meldung von Windows. Landet auch im Info-Center, falls du gerade nicht hingeschaut hast.</p>
+      </div>
+      <p class="ohne-bild">Davon gibt’s hier kein Bild. Drin steht dasselbe wie im Liveticker – „Tor für Augsburg“, der Spielstand und wer getroffen hat –, daneben das Wappen.</p>
+    </div>
+
+    <div class="look">
+      <div class="look-text">
+        <h3>Umstellen</h3>
+        <p>Doppelklick auf das Symbol unten rechts öffnet die Einstellungen. Unter „Anzeige“ wählst du den Look, die Ecke, die Größe (bis 150&nbsp;%) und wie lange die Meldung stehen bleibt (5 bis 60 Sekunden). „Vorschau zeigen“ führt sie dir gleich vor.</p>
+      </div>
+      <div class="bilder">
+        <figure class="fenster">
+          <div class="ausschnitt bis382">
+            <img src="img/einstellungen.png" width="560" height="600" loading="lazy" alt="Einstellungsfenster, Reiter Anzeige: Auswahl zwischen Anzeigetafel, Videotext, Liveticker und Windows-Benachrichtigung, darunter LED-Farbe, Position, Größe und Anzeigedauer">
+          </div>
+          <figcaption>Der Reiter „Anzeige“ in den Einstellungen.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap funktionen" id="funktionen" aria-labelledby="funktionen-titel">
+    <div class="titelzeile">
+      <h2 id="funktionen-titel">Was es kann</h2>
+      <p class="randnotiz">Zufällig genau elf Punkte.</p>
+    </div>
+    <ol class="elf" role="list">
+      <li>
+        <h3>Jedes Tor in Sekunden</h3>
+        <p>Mit Torschütze, Minute und Vorlage, dazu Elfmeter oder Eigentor. Wird ein Tor wieder zurückgenommen, kommt auch das – und wenn es dann doch zählt, „Tor zählt doch“.</p>
+      </li>
+      <li>
+        <h3>Acht Wettbewerbe</h3>
+        <p>Bundesliga, 2.&nbsp;Liga, 3.&nbsp;Liga, Frauen-Bundesliga, DFB-Pokal, Champions League, Europa League und Conference League. Ab Werk ist nur die Bundesliga an, den Rest hakst du in den Einstellungen an. Im Europapokal erst mal nur Spiele mit deutschen Teams, auf Wunsch alle.</p>
+      </li>
+      <li>
+        <h3>Dein Verein</h3>
+        <p>Tore deines Lieblingsvereins kommen mit großem „TOOOR!“ und eigenem Jubel-Sound. Gegentore wahlweise normal, leise oder gar nicht.</p>
+      </li>
+      <li>
+        <h3>Anpfiff, Halbzeit, Abpfiff, Rote Karte</h3>
+        <p>Jeweils einzeln an- und abschaltbar, mit passendem Pfiff: einer zum Anpfiff, zwei zur Pause, drei zum Schluss. Gelb-Rot zählt bei den Roten Karten mit.</p>
+      </li>
+      <li>
+        <h3>Alle Spielstände auf Knopfdruck</h3>
+        <p><kbd>Strg</kbd>+<kbd>Alt</kbd>+<kbd>T</kbd> zeigt alle Spiele des Tages auf einmal: laufende mit Spielstand, spätere mit Anstoßzeit. Das Kürzel kannst du ändern.</p>
+      </li>
+      <li>
+        <h3>Aufs Handy</h3>
+        <p>Tore zusätzlich als Push-Nachricht über die kostenlose App ntfy, ohne Konto. Wie das geht, steht <a href="#handy">unten bei den Fragen</a>.</p>
+      </li>
+      <li>
+        <h3>In deinen Discord-Kanal</h3>
+        <p>Per Webhook landen die Tore in einem Kanal deiner Wahl – zum Beispiel auf dem Server mit deinen Leuten.</p>
+      </li>
+      <li>
+        <h3>Im Discord-Profil</h3>
+        <p>Deine Freunde sehen „Schaut Tor-Alarm“ mit dem laufenden Spielstand und dem Liga-Logo, dazu einen Knopf „Tor-Alarm holen“, der hierher führt. Ist ab Werk an und lässt sich abschalten.</p>
+      </li>
+      <li>
+        <h3>Ton nach Geschmack</h3>
+        <p>Schiri-Pfiff, Stadionhupe, Torglocke, Stadionjubel – oder deine eigene Torhymne als MP3.</p>
+      </li>
+      <li>
+        <h3>Auch mal Ruhe</h3>
+        <p>Feste Ruhezeit, zum Beispiel nachts. Oder im Menü stumm schalten: für eine Stunde, drei Stunden oder bis morgen um acht. Praktisch auch, wenn du ein Spiel im Stream mit Verzögerung schaust.</p>
+      </li>
+      <li>
+        <h3>Keine Pfiff-Lawine</h3>
+        <p>Nach dem Standby oder wenn das Internet eine Weile weg war, kommen nicht zehn Meldungen auf einmal, sondern pro Spiel eine kurze Zusammenfassung, was du verpasst hast.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="wrap fragen" id="fragen" aria-labelledby="fragen-titel">
+    <h2 id="fragen-titel">Fragen</h2>
+    <div class="fragen-raster">
+      <div class="frage">
+        <h3>Woher kommen die Daten?</h3>
+        <p>Von FotMob – dieselben öffentlichen Daten, die auch die FotMob-Webseite benutzt. Fällt FotMob aus, springt OpenLigaDB ein (Bundesliga, 2. und 3.&nbsp;Liga, etwas langsamer). Tor-Alarm ist ein inoffizielles Fan-Projekt und hat nichts mit der DFL, dem DFB, der UEFA, FotMob oder den Vereinen zu tun.</p>
+      </div>
+      <div class="frage">
+        <h3>Kostet das was?</h3>
+        <p>Nein. Keine Werbung, kein Abo, kein Konto. Der Quellcode liegt offen auf <a href="https://github.com/uwemanfred64-png/tor-alarm">GitHub</a>, unter MIT-Lizenz.</p>
+      </div>
+      <div class="frage">
+        <h3>Gibt’s das für Mac oder Linux?</h3>
+        <p>Nein, nur für Windows 10 und 11. Aufs Handy kommen die Tore trotzdem, über ntfy (siehe unten) – dafür muss Tor-Alarm aber auf einem Windows-PC laufen.</p>
+      </div>
+      <div class="frage">
+        <h3>Was schickt Tor-Alarm ins Internet?</h3>
+        <p>Es holt Spielstände und Vereinswappen bei FotMob bzw. OpenLigaDB. An ntfy oder einen Discord-Kanal geht nur etwas, wenn du das selbst einträgst. Die Anzeige im Discord-Profil läuft über das Discord-Programm auf deinem PC; sie ist ab Werk an und lässt sich unter „Handy &amp; Discord“ abschalten. Sonst schickt Tor-Alarm nichts weg, auch keine Nutzungsstatistik.</p>
+      </div>
+
+      <div class="frage breit" id="handy">
+        <div class="handy-text">
+          <h3>Wie kommen die Tore aufs Handy?</h3>
+          <ol class="schritte klein" role="list">
+            <li>Die kostenlose App <strong>ntfy</strong> installieren (Android oder iPhone, ohne Anmeldung).</li>
+            <li>In der App auf „+“ tippen und ein Thema abonnieren, z.&nbsp;B. <code>toralarm-k7m2x</code>. Nimm etwas Ausgefallenes – wer den Namen kennt, kann mitlesen.</li>
+            <li>Denselben Namen in Tor-Alarm unter <b class="ui">Einstellungen → Handy &amp; Discord</b> eintragen und „Test senden“ drücken.</li>
+          </ol>
+          <p>Für einen Discord-Kanal geht es genauso, nur mit einem Webhook: in Discord beim Kanal „Kanal bearbeiten“ → „Integrationen“ → „Webhooks“ → „Neuer Webhook“, die Webhook-URL kopieren und in Tor-Alarm einfügen.</p>
+        </div>
+        <figure class="fenster">
+          <div class="ausschnitt bis486">
+            <img src="img/einstellungen-handy.png" width="560" height="600" loading="lazy" alt="Einstellungsfenster, Reiter Handy und Discord: Feld für das ntfy-Thema, Feld für die Discord-Webhook-URL, Häkchen für die Anzeige im Discord-Profil">
+          </div>
+          <figcaption>Der Reiter „Handy &amp; Discord“ in den Einstellungen.</figcaption>
+        </figure>
+      </div>
+
+      <div class="frage">
+        <h3>Wie werde ich es wieder los?</h3>
+        <p>Ganz normal über die Windows-Einstellungen → Apps → Tor-Alarm → Deinstallieren. Soll es nur nicht mehr mit Windows starten: in den Einstellungen unter „Allgemein“ den Haken bei „Mit Windows starten“ rausnehmen.</p>
+      </div>
+      <div class="frage">
+        <h3>Fehler gefunden, Idee gehabt?</h3>
+        <p>Komm auf den <a href="https://discord.gg/UzE2vRbv3J">Discord-Server</a> oder schreib’s auf GitHub unter <a href="https://github.com/uwemanfred64-png/tor-alarm/issues">Issues</a>. Und falls auf einmal keine Tore mehr kommen: Wenn FotMob seine Daten umbaut, braucht Tor-Alarm manchmal ein Update.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="fuss">
+  <div class="wrap">
+    <p><strong>Tor-Alarm 1.1.0</strong> · <a href="https://github.com/uwemanfred64-png/tor-alarm">Quellcode auf GitHub</a> · <a href="https://github.com/uwemanfred64-png/tor-alarm/blob/main/LICENSE">MIT-Lizenz</a> · <a href="https://github.com/uwemanfred64-png/tor-alarm/issues">Fehler melden</a> · <a href="https://discord.gg/UzE2vRbv3J">Discord</a></p>
+    <p>Inoffizielles Fan-Projekt, ohne Verbindung zur DFL, zum DFB, zur UEFA, zu FotMob oder den Vereinen.</p>
+    <p>Diese Seite setzt keine Cookies und zählt keine Besucher. Sie liegt bei GitHub Pages; GitHub speichert dabei wie jeder Webserver die IP-Adressen der Aufrufe.</p>
+  </div>
+</footer>
+
+<script src="js/board.js"></script>
+<script src="js/tafel.js"></script>
+<script src="js/seite.js"></script>
+</body>
+</html>

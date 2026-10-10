@@ -3,25 +3,47 @@
 
 const { Notification, nativeImage, shell, net } = require('electron');
 
-const crestCache = new Map();
+const crestCache = new Map(); // url -> { img, until }
 const alive = new Set(); // Referenzen halten, sonst sammelt der GC die Meldung samt Klick-Handler ein
+const MAX_BYTES = 512 * 1024;
 
-async function crest(url) {
-  if (!url) return null;
-  if (crestCache.has(url)) return crestCache.get(url);
+function httpsUrl(url) {
   try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 3000);
+    return new URL(url).protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+// Wappen laden – nur von https-Adressen, klein und mit Zeitlimit für die ganze Antwort.
+async function crest(url) {
+  if (!url || !httpsUrl(url)) return null;
+  const hit = crestCache.get(url);
+  if (hit && hit.until > Date.now()) return hit.img;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 3000);
+  try {
     const res = await net.fetch(url, { signal: ctrl.signal });
-    clearTimeout(t);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const img = nativeImage.createFromBuffer(Buffer.from(await res.arrayBuffer()));
+    if (Number(res.headers.get('content-length')) > MAX_BYTES) throw new Error('zu groß');
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.length > MAX_BYTES) throw new Error('zu groß');
+    const img = nativeImage.createFromBuffer(buf);
     const out = img.isEmpty() ? null : img.resize({ width: 64, height: 64, quality: 'good' });
-    crestCache.set(url, out);
+    crestCache.set(url, { img: out, until: Infinity });
     return out;
   } catch {
+    // Fehlschlag nur kurz merken – nach einem WLAN-Aussetzer soll das Wappen wiederkommen
+    crestCache.set(url, { img: null, until: Date.now() + 10 * 60_000 });
     return null;
+  } finally {
+    clearTimeout(t);
   }
+}
+
+// Höchstens kurz auf das Wappen warten – die Meldung ist wichtiger als das Bild
+function crestQuick(url, ms = 1500) {
+  return Promise.race([crest(url), new Promise((r) => setTimeout(() => r(null), ms))]);
 }
 
 const scoreLine = (c) => `${c.home.name} ${c.score[0]}:${c.score[1]} ${c.away.name}`;
@@ -58,7 +80,7 @@ async function showToast(card) {
   if (!Notification.isSupported()) return false;
   const t = card.text || {};
   const team = card.side === 'home' ? card.home : card.side === 'away' ? card.away : null;
-  const icon = await crest(team ? team.logo : card.home && card.home.logo);
+  const icon = await crestQuick(team ? team.logo : card.home && card.home.logo);
   const n = new Notification({
     title: (card.demo ? 'Test: ' : '') + (t.headline || 'Tor-Alarm'),
     body: body(card),

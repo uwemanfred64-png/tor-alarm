@@ -73,7 +73,7 @@ test('aberkannt auf der einen Seite verschluckt kein Tor auf der anderen', () =>
   assert.deepStrictEqual(second[0].prev, [1, 1]);
 });
 
-test('silentDrops (OpenLigaDB): kurze Rückgänge ignorieren, lange still angleichen', () => {
+test('silentDrops (OpenLigaDB): kurze Rückgänge ignorieren, eigene Rücknahme nach 4 Abrufen melden', () => {
   const d = new GoalDetector();
   const o = { dropConfirm: 4, silentDrops: true };
   d.update([m('x', 2, 0)], o);
@@ -81,11 +81,14 @@ test('silentDrops (OpenLigaDB): kurze Rückgänge ignorieren, lange still anglei
   assert.deepStrictEqual(d.update([m('x', 1, 0)], o), []);
   assert.deepStrictEqual(d.update([m('x', 2, 0)], o), []); // Ausreißer vorbei, nichts passiert
   assert.strictEqual(d.update([m('x', 3, 0)], o)[0].nth, 3);
-  // vier Mal niedriger: Stand wird ohne Meldung angeglichen
-  for (let i = 0; i < 4; i++) assert.deepStrictEqual(d.update([m('x', 2, 0)], o), []);
+  // Die Quelle hatte 3:0 selbst geliefert – vier Mal 2:0 heißt: das 3:0 wurde zurückgenommen
+  for (let i = 0; i < 3; i++) assert.deepStrictEqual(d.update([m('x', 2, 0)], o), []);
+  const dis = d.update([m('x', 2, 0)], o);
+  assert.strictEqual(dis.length, 1);
+  assert.strictEqual(dis[0].type, 'disallowed');
   const again = d.update([m('x', 3, 0)], o);
   assert.strictEqual(again.length, 1);
-  assert.strictEqual(again[0].nth, 3); // main.js filtert das über die announced-Liste
+  assert.strictEqual(again[0].nth, 3);
 });
 
 test('seed: Startstand von außen, danach normale Meldungen', () => {
@@ -223,4 +226,55 @@ test('Status: Spiele ohne redCards-Feld (alte Daten) gehen auch', () => {
   const t = new StatusTracker();
   t.update([{ id: 'x', status: 'pre', minute: null }]);
   assert.deepStrictEqual(kinds(t.update([{ id: 'x', status: 'live', minute: '1' }])), ['kickoff']);
+});
+
+test('unsinnige Spielstände werden ignoriert, alter Stand bleibt', () => {
+  const d = new GoalDetector();
+  d.update([m('x', 1, 0)]);
+  assert.deepStrictEqual(d.update([m('x', 99, 0)]), []);
+  assert.deepStrictEqual(d.update([m('x', -1, 0)]), []);
+  assert.deepStrictEqual(d.update([m('x', 1.5, 0)]), []);
+  assert.deepStrictEqual(d.update([m('x', null, 0)]), []);
+  const ev = d.update([m('x', 2, 0)]);
+  assert.strictEqual(ev.length, 1);
+  assert.strictEqual(ev[0].nth, 2);
+});
+
+test('Riesensprung: erst beim zweiten Abruf, dann EIN Sammel-Ereignis', () => {
+  const d = new GoalDetector();
+  d.update([m('x', 0, 0)]);
+  assert.deepStrictEqual(d.update([m('x', 7, 1)]), []); // einmalig: nicht glauben
+  const ev = d.update([m('x', 7, 1)]);
+  assert.strictEqual(ev.length, 1);
+  assert.strictEqual(ev[0].type, 'jump');
+  assert.deepStrictEqual(ev[0].prev, [0, 0]);
+  assert.deepStrictEqual(ev[0].score, [7, 1]);
+  // danach normal weiter
+  assert.strictEqual(d.update([m('x', 8, 1)])[0].nth, 8);
+});
+
+test('Riesensprung, der beim nächsten Abruf wieder weg ist, löst nichts aus', () => {
+  const d = new GoalDetector();
+  d.update([m('x', 1, 1)]);
+  assert.deepStrictEqual(d.update([m('x', 9, 1)]), []);
+  assert.deepStrictEqual(d.update([m('x', 1, 1)]), []);
+  assert.deepStrictEqual(d.update([m('x', 2, 1)]).map((e) => e.nth), [2]);
+});
+
+test('silentDrops: eigene Rücknahme der Quelle wird gemeldet, Rückstand zum Seed bleibt still', () => {
+  const o = { dropConfirm: 2, silentDrops: true };
+  // a) OpenLigaDB übernimmt den FotMob-Stand 2:0, hängt selbst noch bei 1:0 → still
+  const a = new GoalDetector();
+  a.seed('x', [2, 0]);
+  assert.deepStrictEqual(a.update([m('x', 1, 0)], o), []);
+  assert.deepStrictEqual(a.update([m('x', 1, 0)], o), []);
+  // b) OpenLigaDB hat 1:0 selbst geliefert und nimmt es zurück → sichtbare Rücknahme
+  const b = new GoalDetector();
+  b.update([m('x', 0, 0)], o);
+  assert.strictEqual(b.update([m('x', 1, 0)], o)[0].type, 'goal');
+  assert.deepStrictEqual(b.update([m('x', 0, 0)], o), []);
+  const ev = b.update([m('x', 0, 0)], o);
+  assert.strictEqual(ev.length, 1);
+  assert.strictEqual(ev[0].type, 'disallowed');
+  assert.deepStrictEqual(ev[0].prev, [1, 0]);
 });

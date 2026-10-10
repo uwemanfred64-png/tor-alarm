@@ -413,11 +413,11 @@
         if (side) spec.hi = [side, Y];
         info.push([C, scorerText(c, team)]);
         if (c.varPending) info.push([M, 'Videobeweis läuft ...']);
-        else if (c.reinstated) info.push([G, 'Tor zählt nach Videobeweis']);
+        else if (c.reinstated) info.push([G, 'Tor zählt doch']);
         break;
       }
       case 'disallowed': {
-        spec.right = { text: 'VAR' };
+        spec.right = { text: 'Aberkannt' };
         info.push([C, team ? `Kein Tor für ${team}` : 'Tor zurückgenommen']);
         const p = Array.isArray(c.prev) ? `${c.prev[0]}:${c.prev[1]}` : '';
         if (!spec.sentence && p) spec.sentence = `Das ${p} zählt nicht.`;
@@ -448,7 +448,7 @@
         spec.right = { text: 'Abpfiff' };
         break;
       case 'redcard':
-        spec.right = { text: 'Rote Karte', alt: 'Rot', block: R };
+        spec.right = c.yellowRed ? { text: 'Gelb-Rot', block: R } : { text: 'Rote Karte', alt: 'Rot', block: R };
         info.push([C, redCardText(c, team)]);
         break;
       default:

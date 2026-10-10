@@ -75,7 +75,8 @@ test('Ereignis-Kennzeichnung: nur Tor rot, rote Karte als Kärtchen, nichts dopp
   assert.deepStrictEqual(tk.kindOf({ type: 'goal' }, 'Tor für Augsburg'), { text: 'Tor', red: true });
   assert.deepStrictEqual(tk.kindOf({ type: 'goal', conceded: true }, 'Gegentor'), { text: 'Tor', red: false });
   assert.deepStrictEqual(tk.kindOf({ type: 'redcard' }, 'Rote Karte für Bayern'), { card: true });
-  assert.deepStrictEqual(tk.kindOf({ type: 'disallowed' }, 'Kein Tor für Bayern'), { text: 'VAR' });
+  // Aberkannt: keine Kennzeichnung "VAR" – der Grund steht nicht in den Daten
+  assert.strictEqual(tk.kindOf({ type: 'disallowed' }, 'Kein Tor für Bayern'), null);
   assert.strictEqual(tk.kindOf({ type: 'kickoff' }, 'Anpfiff'), null);
   assert.deepStrictEqual(tk.kindOf({ type: 'kickoff' }, 'Anpfiff in Leipzig'), { text: 'Anpfiff' });
   assert.strictEqual(tk.kindOf({ type: 'missed' }, 'Verpasste Tore'), null);

@@ -10,23 +10,23 @@ klingelt, steht unten rechts sofort, wer getroffen hat.
 
 ## Was es kann
 
-- **Jedes Tor in Sekunden**, mit Torschütze, Minute, Elfmeter, Eigentor und Vorlage. Nimmt der VAR ein
-  Tor zurück, kommt auch das („Kein Tor") – und wenn es dann doch zählt, „Tor zählt doch".
+- **Jedes Tor in Sekunden**, mit Torschütze, Minute, Elfmeter, Eigentor und Vorlage. Wird ein Tor
+  wieder zurückgenommen, kommt auch das („Kein Tor") – und wenn es dann doch zählt, „Tor zählt doch".
 - **Vier Looks zum Aussuchen**: Stadion-Anzeigetafel mit Leuchtpunkten, Videotext wie Seite 250,
   Liveticker-Eintrag oder ganz normal als Windows-Benachrichtigung. Dazu Ecke, Größe und Anzeigedauer.
 - **Lieblingsverein**: Tore deines Vereins kommen mit großem „TOOOR!" und eigenem Sound.
   Gegentore wahlweise normal, leise oder gar nicht.
-- **Mehr als Tore, wenn du willst**: Anpfiff, Halbzeit, Abpfiff und Rote Karten – jeweils einzeln an/aus,
-  mit passendem Pfiff (einer zum Anpfiff, zwei zur Pause, drei zum Schluss).
-- **Alle Spielstände auf Knopfdruck**: Strg+Alt+T zeigt die Konferenz aller laufenden Spiele.
+- **Mehr als Tore, wenn du willst**: Anpfiff, Halbzeit, Abpfiff und Rote Karten (auch Gelb-Rot) –
+  jeweils einzeln an/aus, mit passendem Pfiff (einer zum Anpfiff, zwei zur Pause, drei zum Schluss).
+- **Alle Spielstände auf Knopfdruck**: Strg+Alt+T zeigt alle Spiele des Tages wie in einer Konferenz.
 - **Aufs Handy oder in Discord**: Tore auf Wunsch zusätzlich als Push aufs Handy (über die kostenlose
   App ntfy, ohne Konto) oder in einen Discord-Kanal deiner Wahl.
 - **Im Discord-Profil**: Freunde sehen „Schaut Tor-Alarm" mit dem laufenden Spielstand, dem Logo der
   Liga und einem Knopf zum Herunterladen (lässt sich abschalten).
 - **Ton nach Geschmack**: Schiri-Pfiff, Stadionhupe, Torglocke, Jubel – oder deine eigene Torhymne als
   MP3. Stumm schalten für eine Stunde oder feste Ruhezeiten gehen auch.
-- Nach Standby oder Funkloch gibt es keine Pfiff-Lawine, sondern pro Spiel eine kurze Zusammenfassung,
-  was du verpasst hast.
+- Nach Standby oder wenn das Internet eine Weile weg war, gibt es keine Pfiff-Lawine, sondern pro Spiel
+  eine kurze Zusammenfassung, was du verpasst hast.
 
 | Videotext | Liveticker |
 | --- | --- |
@@ -62,6 +62,11 @@ Die Spielstände kommen von FotMob (die öffentlichen Daten, die auch die FotMob
 FotMob aus, springt OpenLigaDB ein (Bundesliga, 2. und 3. Liga). Tor-Alarm ist ein inoffizielles
 Fan-Projekt und hat nichts mit der DFL, dem DFB, der UEFA, FotMob oder den Vereinen zu tun. Ändert FotMob
 seine Daten, kann es sein, dass Tor-Alarm ein Update braucht.
+
+## Fragen, Fehler, Ideen
+
+Auf dem Discord-Server: **https://discord.gg/UzE2vRbv3J** – oder hier auf GitHub unter
+[Issues](https://github.com/uwemanfred64-png/tor-alarm/issues).
 
 ## Selbst bauen
 

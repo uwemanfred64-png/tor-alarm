@@ -1,0 +1,512 @@
+/* Tor-Alarm – Projektseite.
+   Oben hängt die Anzeigetafel aus dem Programm (js/board.js, js/tafel.js), darunter liest sich die
+   Seite wie ein Stadionheft: Papierton, Überschriften in DIN (Bahnschrift, auf jedem Windows 10/11
+   dabei), Linien statt Kästen, Bildschirmfotos in Originalgröße. Nur Systemschriften, keine Fremdinhalte. */
+
+:root {
+  --papier: #f2eee5;
+  --tinte: #1c1b18;
+  --tinte-2: #57524a;
+  --haar: #cdc5b3;
+  --bernstein: #ffb52e;
+  --bernstein-2: #f2a516;
+  --unterstrich: #cf8d14;
+
+  --nacht: #100f0d;
+  --gehaeuse: #151412;
+  --kante: #2c2a26;
+  --schild: #a8a196;
+  --hell: #ece6d9;
+
+  --din: Bahnschrift, "DIN Alternate", "DIN Next", sans-serif-condensed, "Arial Narrow", "Segoe UI", Arial, sans-serif;
+  --text: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: Consolas, "Cascadia Mono", Menlo, "Courier New", monospace;
+
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: 16px;
+}
+
+body {
+  margin: 0;
+  background: var(--papier);
+  color: var(--tinte);
+  font: 17px/1.55 var(--text);
+}
+
+img { max-width: 100%; height: auto; }
+
+a {
+  color: inherit;
+  text-decoration-color: var(--unterstrich);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+a:hover { text-decoration-color: currentColor; }
+
+:focus-visible {
+  outline: 3px solid var(--tinte);
+  outline-offset: 2px;
+}
+
+strong, b { font-weight: 600; }
+
+kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 1px 5px 2px;
+  border: 1px solid currentColor;
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  font: 600 0.8em/1.3 var(--text);
+  text-align: center;
+  white-space: nowrap;
+}
+
+code {
+  font: 0.94em/1 var(--mono);
+  background: #e6e0d2;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.wrap {
+  max-width: 1168px;
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+/* ------------------------------------------------------------------ Stadion: Kopf und Tafel */
+
+.stadion {
+  background: var(--nacht);
+  color: var(--hell);
+  padding-bottom: 40px;
+}
+
+.kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 24px;
+  padding-block: 18px 26px;
+}
+
+.marke {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font: 600 23px/1 var(--din);
+  letter-spacing: 0.01em;
+}
+.marke img { width: 28px; height: 28px; }
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 22px;
+  font: 400 17px/1 var(--din);
+}
+.nav a {
+  padding-block: 8px;
+  color: #d3ccbd;
+  text-decoration: none;
+}
+.nav a:hover { color: var(--bernstein); }
+.stadion :focus-visible { outline-color: var(--bernstein); }
+
+.anzeige {
+  display: grid;
+  grid-template-columns: minmax(0, 672px) minmax(0, 1fr);
+  gap: 24px 48px;
+  align-items: start;
+}
+
+/* Platz für die Tafel schon vor dem ersten Bild freihalten (134 x 47 Punktabstände + Rahmen). */
+.tafel-halter {
+  --p: 3;
+  width: 100%;
+  max-width: 672px;
+  aspect-ratio: 672 / 237;
+}
+.tafel-ersatz { display: block; margin: -8px; max-width: calc(100% + 16px); }
+
+/* Das Gehäuse wie in src/popup/designs/tafel.css – nur mitwachsend: --p ist der Punktabstand,
+   den js/seite.js aus der verfügbaren Breite ausrechnet (im Programm sind es 3 px). */
+.tafel {
+  width: fit-content;
+  margin: 0;
+  padding: calc(var(--p) * 3px) calc(var(--p) * 3px) 0;
+  background: var(--gehaeuse);
+  border: 1px solid var(--kante);
+  border-radius: 3px;
+  color: var(--schild);
+  font: 11px/1 var(--text);
+  cursor: default;
+}
+.tafel-board { display: block; border-radius: 1px; }
+.tafel-plate {
+  height: calc(var(--p) * 8px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: clamp(12px, calc(var(--p) * 3.3px), 17px);
+  line-height: 1.3;
+}
+.tafel-foot {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tafel-actions { flex: none; display: flex; align-items: center; gap: 6px; }
+.tafel-page { font-variant-numeric: tabular-nums; }
+.tafel-hint, .tafel-x { display: none; }
+
+.tafel-unter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 20px;
+  max-width: 672px;
+  margin-top: 14px;
+}
+.tafel-unter p {
+  margin: 0;
+  color: var(--schild);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.szenen { display: grid; gap: 2px; }
+
+.szene {
+  appearance: none;
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 7px 12px 8px 14px;
+  border: 0;
+  border-left: 3px solid var(--kante);
+  border-radius: 0;
+  background: none;
+  color: var(--hell);
+  font: 600 18px/1.25 var(--din);
+  text-align: left;
+  cursor: pointer;
+}
+.szene small {
+  display: block;
+  margin-top: 2px;
+  color: var(--schild);
+  font: 400 14px/1.4 var(--text);
+}
+.szene kbd { font-size: 0.78em; }
+.szene:hover { background: #1b1a17; }
+.szene[aria-pressed="true"] { border-left-color: var(--bernstein); color: var(--bernstein); }
+.szene:focus-visible { outline: 2px solid var(--bernstein); outline-offset: -2px; }
+
+/* Rahmen mit gut 3:1 gegen den Grund, damit man den Knopf als Knopf erkennt */
+.pause {
+  appearance: none;
+  flex: none;
+  margin: 0;
+  padding: 6px 12px 7px;
+  border: 1px solid #6e695f;
+  border-radius: 3px;
+  background: none;
+  color: var(--schild);
+  font: 400 15px/1.2 var(--text);
+  cursor: pointer;
+}
+.pause:hover { color: var(--hell); border-color: var(--schild); }
+
+/* ------------------------------------------------------------------ Stadionheft */
+
+main { padding-bottom: 72px; }
+
+h2 {
+  margin: 0 0 18px;
+  padding-top: 10px;
+  border-top: 3px solid var(--tinte);
+  font: 600 27px/1.15 var(--din);
+}
+
+h3 {
+  margin: 0 0 4px;
+  font: 600 20px/1.25 var(--din);
+}
+
+section { padding-top: 64px; }
+
+.vorspann { max-width: 40em; margin: 0 0 8px; }
+
+/* Anstoß: Satz, Download, Installation */
+
+.anstoss {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 40px 64px;
+  padding-top: 44px;
+}
+
+.lead {
+  margin: 0 0 26px;
+  font-size: 21px;
+  line-height: 1.45;
+  max-width: 28em;
+}
+
+.knopf {
+  display: inline-block;
+  padding: 13px 24px 14px;
+  border: 2px solid var(--tinte);
+  border-radius: 3px;
+  background: var(--bernstein);
+  color: var(--tinte);
+  font: 600 23px/1.15 var(--din);
+  text-decoration: none;
+}
+.knopf small {
+  display: block;
+  margin-top: 4px;
+  font: 400 14px/1.3 var(--text);
+}
+.knopf:hover { background: var(--bernstein-2); }
+.knopf:active { transform: translateY(1px); }
+
+/* Nur sichtbar, wenn js/seite.js kein Windows erkennt (Handy, Mac, Linux) */
+.kein-windows {
+  max-width: 26em;
+  margin: 16px 0 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--tinte);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.fakten { margin: 16px 0 4px; }
+.nebenbei { margin: 0; font-size: 15px; color: var(--tinte-2); }
+
+.schritte {
+  list-style: none;
+  counter-reset: schritt;
+  margin: 0;
+  padding: 0;
+}
+.schritte li {
+  counter-increment: schritt;
+  position: relative;
+  padding: 0 0 16px 40px;
+}
+.schritte li::before {
+  content: counter(schritt);
+  position: absolute;
+  left: 0;
+  top: -1px;
+  font: 600 25px/1.1 var(--din);
+}
+.schritte.klein li { padding-left: 32px; padding-bottom: 10px; }
+.schritte.klein li::before { font-size: 21px; }
+
+.ui { font-weight: 600; white-space: nowrap; }
+.tray { vertical-align: -2px; }
+
+/* Vier Looks */
+
+.look {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  gap: 16px 40px;
+  padding-block: 30px;
+  border-top: 1px solid var(--haar);
+}
+.vorspann + .look { border-top: 0; }
+
+.look-text p { margin: 0; }
+
+/* Windows-Meldung: kein Bild, nur ein Satz in der Bildspalte */
+.ohne-bild {
+  max-width: 30em;
+  margin: 0;
+  padding-top: 26px;
+  color: var(--tinte-2);
+}
+
+.nr {
+  display: inline-block;
+  min-width: 1.1em;
+  font-variant-numeric: tabular-nums;
+}
+
+.bilder {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px 32px;
+  align-items: flex-start;
+}
+.stapel { display: grid; gap: 26px; }
+
+figure { margin: 0; }
+
+figcaption {
+  margin-top: 9px;
+  color: var(--tinte-2);
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+/* Popup-Bilder haben 8 px durchsichtigen Rand (für den Schatten) – den gleichen wir aus,
+   damit die Kanten der Meldungen an der Textkante stehen. */
+.popup.b404 { width: min(404px, 100%); }
+.popup.b384 { width: min(384px, 100%); }
+.popup img {
+  display: block;
+  width: calc(100% + 16px);
+  max-width: none;
+  margin: -8px;
+}
+
+.fenster { width: min(560px, 100%); }
+.fenster img { display: block; }
+
+/* Die Einstellungsfenster sind unten leer – gezeigt wird nur der obere Teil. */
+.ausschnitt {
+  overflow: hidden;
+  border: 1px solid #b9b19f;
+  background: #fff;
+}
+.ausschnitt.bis382 { aspect-ratio: 560 / 382; }
+.ausschnitt.bis486 { aspect-ratio: 560 / 486; }
+
+/* Was es kann – nummeriert wie eine Aufstellung */
+
+.titelzeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 24px;
+  margin-bottom: 18px;
+  padding-top: 10px;
+  border-top: 3px solid var(--tinte);
+}
+.titelzeile h2 { margin: 0; padding: 0; border: 0; }
+.randnotiz { margin: 0; color: var(--tinte-2); font-size: 15px; }
+
+.elf {
+  list-style: none;
+  counter-reset: elf;
+  margin: 0;
+  padding: 0;
+  columns: 2;
+  column-gap: 64px;
+}
+.elf li {
+  counter-increment: elf;
+  position: relative;
+  break-inside: avoid;
+  padding: 12px 0 14px 50px;
+  border-bottom: 1px solid var(--haar);
+}
+.elf li::before {
+  content: counter(elf);
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 36px;
+  font: 600 26px/1.1 var(--din);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.elf p { margin: 0; }
+
+/* Fragen */
+
+.fragen-raster {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0 64px;
+}
+.frage {
+  padding: 16px 0 20px;
+  border-bottom: 1px solid var(--haar);
+}
+.frage p { margin: 0 0 10px; }
+.frage p:last-child { margin-bottom: 0; }
+
+.frage.breit {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px 64px;
+  align-items: start;
+}
+.handy-text h3 { margin-bottom: 12px; }
+
+/* Fuß */
+
+.fuss {
+  background: var(--nacht);
+  color: var(--schild);
+  padding-block: 28px 32px;
+  font-size: 15px;
+}
+.fuss p { margin: 0 0 6px; }
+.fuss strong { color: var(--hell); }
+.fuss a { color: var(--hell); }
+.fuss :focus-visible { outline-color: var(--bernstein); }
+
+/* ------------------------------------------------------------------ Schmaler */
+
+@media (max-width: 1020px) {
+  .anzeige { grid-template-columns: minmax(0, 1fr); }
+  .szenen { max-width: 672px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .frage.breit { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 860px) {
+  .anstoss { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .look { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .ohne-bild { padding-top: 0; }
+  .elf { columns: 1; }
+  .fragen-raster { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 600px) {
+  body { font-size: 16px; }
+  .wrap { padding-inline: 16px; }
+  .kopf { padding-block: 14px 18px; }
+  .marke { font-size: 21px; }
+  .nav { gap: 0 16px; font-size: 16px; }
+  .stadion { padding-bottom: 28px; }
+  .tafel-unter p { font-size: 14px; }
+  .szene { padding: 6px 8px 7px 10px; font-size: 16px; }
+  .szene small { font-size: 13px; }
+  section { padding-top: 48px; }
+  .anstoss { padding-top: 32px; }
+  .lead { font-size: 19px; }
+  .knopf { display: block; text-align: center; font-size: 21px; }
+  h2 { font-size: 24px; }
+  .elf li { padding-left: 42px; }
+  .elf li::before { width: 30px; font-size: 23px; }
+}
+
+/* Ganz schmal: Der Download-Knopf steht ohnehin gleich unter der Tafel. */
+@media (max-width: 480px) {
+  .nav-download { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .knopf:active { transform: none; }
+}

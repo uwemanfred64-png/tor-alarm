@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage, shell, ipcMain, powerMonitor, globalShortcut, dialog } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, shell, ipcMain, powerMonitor, globalShortcut, dialog, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const feed = require('./feed');
@@ -49,23 +49,59 @@ const GERMAN_MEN = [54, 146, 208]; // für "Europapokal nur mit deutschen Teams"
 const settingsFile = () => path.join(app.getPath('userData'), 'einstellungen.json');
 let settings = store.migrate(null);
 
+const backupFile = () => settingsFile().replace(/\.json$/, '.bak.json');
+
+// Rückgabe: false nur bei der allerersten Nutzung (keine Datei) – dann Begrüßung/Autostart
 function loadSettings() {
+  const file = settingsFile();
   let raw = null;
+  let state = 'ok';
   try {
-    raw = JSON.parse(fs.readFileSync(settingsFile(), 'utf8'));
-  } catch {
-    /* erste Nutzung oder kaputte Datei: Standardwerte */
+    raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch (e) {
+    if (e && e.code === 'ENOENT') state = 'neu';
+    else {
+      // Kaputte Datei (z. B. Stromausfall beim Speichern): aufheben und die letzte gute Fassung nehmen
+      state = 'kaputt';
+      try {
+        fs.copyFileSync(file, file.replace(/\.json$/, `.kaputt-${Date.now()}.json`));
+      } catch {
+        /* nicht schlimm */
+      }
+      try {
+        raw = JSON.parse(fs.readFileSync(backupFile(), 'utf8'));
+        log('Einstellungsdatei war beschädigt – letzte Sicherung geladen.');
+      } catch {
+        log('Einstellungsdatei war beschädigt, keine Sicherung – Standardwerte.');
+      }
+    }
   }
   settings = store.migrate(raw);
-  return raw != null;
+  // Kein Erststart: Autostart nicht ungefragt wieder einschalten
+  if (state === 'kaputt' && raw == null) settings.autostartSet = true;
+  return state !== 'neu';
 }
 
 function saveSettings() {
   try {
     const file = settingsFile();
     fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file + '.tmp', JSON.stringify(settings, null, 2));
-    fs.renameSync(file + '.tmp', file);
+    const tmp = file + '.tmp';
+    const fd = fs.openSync(tmp, 'w');
+    try {
+      fs.writeSync(fd, JSON.stringify(settings, null, 2));
+      fs.fsyncSync(fd); // wirklich auf der Platte, bevor die alte Datei ersetzt wird
+    } finally {
+      fs.closeSync(fd);
+    }
+    // Die bisherige Datei als Sicherung behalten – aber nur, wenn sie selbst in Ordnung ist
+    try {
+      JSON.parse(fs.readFileSync(file, 'utf8'));
+      fs.copyFileSync(file, backupFile());
+    } catch {
+      /* keine oder kaputte alte Datei: keine Sicherung */
+    }
+    fs.renameSync(tmp, file);
   } catch (e) {
     log('Einstellungen konnten nicht gespeichert werden:', e.message);
   }
@@ -198,12 +234,15 @@ let currentDay = feed.ymd(new Date());
 const announced = new Set();
 // Kürzlich aberkannte Tore, damit "zählt doch" erkannt wird.
 const recentlyDisallowed = new Map();
+// Anpfiff/Halbzeit/Abpfiff/Rote Karten schon gemeldet – auch über einen Quellenwechsel hinweg
+const statusAnnounced = new Set();
 
 const fixtureKey = (m) =>
   `${(m.competition && m.competition.id) || 54}|${m.startUtc ? new Date(m.startUtc).getTime() : '?'}|${norm(m.home.full || m.home.name)}`;
 
 async function fetchMatches(now) {
   const competitions = settings.competitions;
+  let fmError = null;
   try {
     const list = await feed.fotmobToday(now, { competitions });
     if (source !== 'fotmob') log('FotMob wieder erreichbar – zurück zur Hauptquelle.');
@@ -211,12 +250,22 @@ async function fetchMatches(now) {
     fotmobDownSince = null;
     return list;
   } catch (e) {
+    fmError = e;
     log('FotMob-Fehler:', e.message);
     if (!fotmobDownSince) fotmobDownSince = Date.now();
     // Kurze Aussetzer (WLAN nach dem Aufwachen, Rate-Limit) aussitzen.
     if (source === 'fotmob' && Date.now() - fotmobDownSince < 2 * 60_000) throw e;
   }
   const list = await feed.openLigaToday(now, { competitions }); // wirft, wenn auch das nicht geht
+  // OpenLigaDB kennt nur die drei Männer-Ligen. Laufen gerade nur Spiele, die es nicht kennt
+  // (Europapokal, Pokal, Frauen-BL), lieber beim alten FotMob-Stand bleiben und es weiter versuchen.
+  if (
+    source === 'fotmob' &&
+    !list.some((x) => x.status === 'live') &&
+    matches.some((x) => x.source === 'fotmob' && x.status === 'live')
+  ) {
+    throw fmError || new Error('FotMob nicht erreichbar');
+  }
   if (source !== 'openligadb') {
     log('FotMob seit über 2 Minuten nicht erreichbar – nutze OpenLigaDB.');
     source = 'openligadb';
@@ -230,9 +279,22 @@ async function fetchMatches(now) {
         const prev = fm.get(fixtureKey(x));
         if (prev) ol.seed(x.id, [prev.homeScore, prev.awayScore]);
       }
+      // Der Stand ist so frisch wie der letzte FotMob-Abruf – Tore aus der kurzen Lücke normal melden
+      if (ol.primed) ol.lastUpdate = detectors.fotmob.lastUpdate;
     }
   }
   return list;
+}
+
+// Wettbewerbe, die gerade (wieder) angewählt wurden: deren alter Stand ist veraltet
+const justAdded = new Set();
+function forgetJustAdded(list) {
+  if (!justAdded.size) return;
+  for (const m of list) {
+    if (!justAdded.has((m.competition || {}).id)) continue;
+    for (const x of [...Object.values(detectors), ...Object.values(trackers)]) x.state.delete(m.id);
+  }
+  justAdded.clear();
 }
 
 async function poll() {
@@ -247,6 +309,7 @@ async function poll() {
       for (const d of Object.values(detectors)) d.reset();
       for (const t of Object.values(trackers)) t.reset();
       announced.clear();
+      statusAnnounced.clear();
       recentlyDisallowed.clear();
       loadTeams();
     }
@@ -254,6 +317,7 @@ async function poll() {
     matches = await fetchMatches(now);
     lastOk = Date.now();
     lastError = null;
+    forgetJustAdded(matches);
 
     // Veraltet ist, was diese Quelle zuletzt vor über 3 Minuten gesehen hat (Standby, Netz weg,
     // oder die Quelle war eine Weile nicht aktiv) – dann gesammelt melden statt Pfiff-Lawine.
@@ -264,7 +328,8 @@ async function poll() {
         ? det.update(matches, { dropConfirm: 2 })
         : det.update(matches, { dropConfirm: 4, silentDrops: true });
     const quietCatchUp = catchUp || stale || gap > 3 * 60_000;
-    if (quietCatchUp) reportMissed(events);
+    // Nach Standby nicht nachträglich aufs Handy funken; nach einem Netz-Aussetzer schon
+    if (quietCatchUp) reportMissed(events, { forward: !catchUp });
     else for (const ev of events) onScoreEvent(ev);
 
     // Anpfiff, Halbzeit, Abpfiff, Rote Karten – nach einer Lücke nicht nachträglich melden
@@ -289,6 +354,12 @@ async function poll() {
 }
 
 function nextDelay() {
+  const d = baseDelay();
+  // Im Ersatzbetrieb oft nachsehen, ob FotMob wieder da ist
+  return source === 'openligadb' ? Math.min(d, 30_000) : d;
+}
+
+function baseDelay() {
   const now = Date.now();
   if (lastError) return 30_000;
   if (matches.some((m) => m.status === 'live')) return 12_000;
@@ -352,7 +423,8 @@ function goalSound(card) {
 
 function eventSound(type) {
   if (!settings.sound || !settings.eventSounds) return null;
-  const name = { kickoff: 'anpfiff', halftime: 'halbzeitpfiff', fulltime: 'abpfiff', redcard: 'pfiff' }[type];
+  // Rote Karte: eigenes kurzes Dreifach-Pfeifen, damit sie nicht wie ein Tor klingt
+  const name = { kickoff: 'anpfiff', halftime: 'halbzeitpfiff', fulltime: 'abpfiff', redcard: 'rotpfiff' }[type];
   return name ? { name, volume: settings.volume } : null;
 }
 
@@ -376,7 +448,8 @@ function update(handle, card, upd) {
 function forwardCard(card) {
   const f = settings.forward;
   if (card.demo || (!f.ntfyTopic && !f.discordWebhook)) return;
-  if (f.onlyFavorite && !card.favoriteSide) return;
+  // "Nur Lieblingsverein" greift nur, wenn auch einer gewählt ist – sonst würde gar nichts mehr ankommen
+  if (f.onlyFavorite && settings.favorite && !card.favoriteSide) return;
   // Ruhezeit (z. B. nachts) gilt auch fürs Handy. "Stumm schalten" betrifft dagegen nur den PC –
   // wer unterwegs ist, will die Tore ja gerade aufs Handy bekommen.
   if (store.isQuietNow(settings, new Date())) return;
@@ -398,16 +471,49 @@ function forwardCard(card) {
 // ---------------------------------------------------------------- Tore
 
 function onScoreEvent(ev) {
-  const run = ev.type === 'disallowed' ? onDisallowed(ev) : onGoal(ev);
+  const run = ev.type === 'disallowed' ? onDisallowed(ev) : ev.type === 'jump' ? onJump(ev) : onGoal(ev);
   Promise.resolve(run).catch((e) => log('Fehler bei Ereignis:', e.stack || e.message));
 }
 
+// Bestätigter Riesensprung im Spielstand (> 3 Tore auf einmal): als Tore verbuchen, aber nur eine
+// ruhige Sammelkarte zeigen. Liefert die Zahl der noch nicht gemeldeten Tore je Seite.
+function bookJump(ev) {
+  const fx = fixtureKey(ev.match);
+  const missed = { home: 0, away: 0 };
+  ['home', 'away'].forEach((side, i) => {
+    for (let n = ev.prev[i] + 1; n <= ev.score[i]; n++) {
+      const key = `${fx}|${side}|${n}`;
+      if (announced.has(key)) continue;
+      announced.add(key);
+      missed[side] += 1;
+    }
+  });
+  return missed;
+}
+
+function onJump(ev) {
+  const m = ev.match;
+  const missed = bookJump(ev);
+  log('SPRUNG', `${m.home.name} ${ev.prev[0]}:${ev.prev[1]} → ${ev.score[0]}:${ev.score[1]} ${m.away.name}`);
+  if (!(missed.home || missed.away) || !matchWanted(m)) return;
+  present(makeCard(m, { type: 'missed', missed, favoriteSide: favoriteSide(m) }));
+}
+
 // Nach Standby oder längerem Netzausfall: keine Pfiff-Lawine, sondern pro Spiel eine ruhige Karte.
-function reportMissed(events) {
+function reportMissed(events, { forward: sendOn = false } = {}) {
   // Aberkannte Tore zuerst verbuchen, sonst würde ein späteres echtes Tor als "schon gemeldet" gelten.
   for (const ev of events) if (ev.type === 'disallowed') forgetDisallowed(ev);
   const byMatch = new Map();
   for (const ev of events) {
+    if (ev.type === 'jump') {
+      const j = bookJump(ev);
+      if (!matchWanted(ev.match) || !(j.home || j.away)) continue;
+      const e = byMatch.get(ev.match.id) || { m: ev.match, home: 0, away: 0 };
+      e.home += j.home;
+      e.away += j.away;
+      byMatch.set(ev.match.id, e);
+      continue;
+    }
     if (ev.type !== 'goal') continue;
     const key = `${fixtureKey(ev.match)}|${ev.side}|${ev.nth}`;
     if (announced.has(key)) continue;
@@ -419,7 +525,9 @@ function reportMissed(events) {
   }
   for (const { m, home, away } of byMatch.values()) {
     log('VERPASST', `${m.home.name} ${m.homeScore}:${m.awayScore} ${m.away.name}`, `(+${home}/+${away})`);
-    present(makeCard(m, { type: 'missed', missed: { home, away }, favoriteSide: favoriteSide(m) }));
+    const card = makeCard(m, { type: 'missed', missed: { home, away }, favoriteSide: favoriteSide(m) });
+    present(card);
+    if (sendOn) forwardCard(card);
   }
 }
 
@@ -548,6 +656,10 @@ async function onStatusEvent(ev) {
   try {
     const m = ev.match;
     const type = ev.type;
+    // Nach einem Quellenwechsel könnte die andere Quelle dasselbe Ereignis nochmal melden
+    const key = `${fixtureKey(m)}|${type}|${ev.side || ''}|${ev.nth || ''}`;
+    if (statusAnnounced.has(key)) return;
+    statusAnnounced.add(key);
     if (!settings.events[type] || !matchWanted(m)) return;
     const fav = favoriteSide(m);
     log(type.toUpperCase(), `${m.home.name} ${m.homeScore}:${m.awayScore} ${m.away.name}`);
@@ -571,9 +683,16 @@ async function onStatusEvent(ev) {
       try {
         const info = await feed.redCardInfo(m, ev.side, ev.nth);
         if (info && info.player) {
-          update(handle, card, { player: info.player, minute: info.minute || card.minute, pending: false });
+          update(handle, card, {
+            player: info.player,
+            minute: info.minute || card.minute,
+            yellowRed: !!info.yellowRed,
+            pending: false,
+          });
           break;
         }
+        // Spieler noch "<TBD>", aber ob Rot oder Gelb-Rot, steht schon fest
+        if (info && info.yellowRed && !card.yellowRed) update(handle, card, { yellowRed: true });
       } catch (e) {
         log('Karten-Details:', e.message);
       }
@@ -635,7 +754,24 @@ function showConference() {
     matches: list,
   };
   card.text = texts.describe(card);
-  present(card, { force: true });
+  return present(card, { force: true });
+}
+
+// Tastenkürzel: Gedrückthalten schickt Wiederholungen – die zählen nicht. Ein neuer Druck schließt
+// eine noch offene Konferenz wieder (umschalten statt stapeln).
+let conferenceHandle = null;
+let lastConferenceKey = 0;
+function onConferenceHotkey() {
+  const now = Date.now();
+  const gap = now - lastConferenceKey;
+  lastConferenceKey = now; // gleitend: jede Wiederholung verlängert die Sperre
+  if (gap < 1000) return;
+  if (conferenceHandle && !conferenceHandle.closed) {
+    popups.closePopup(conferenceHandle);
+    conferenceHandle = null;
+    return;
+  }
+  conferenceHandle = showConference();
 }
 
 // ---------------------------------------------------------------- Test-Tor / Vorschau
@@ -715,7 +851,7 @@ function registerHotkey(acc) {
   }
   if (!acc) return true;
   try {
-    if (globalShortcut.register(acc, () => showConference())) {
+    if (globalShortcut.register(acc, () => onConferenceHotkey())) {
       hotkeyActive = acc;
       return true;
     }
@@ -862,6 +998,10 @@ ipcMain.handle(
       next.hotkey = before.hotkey;
       registerHotkey(before.hotkey);
     }
+
+    // Neu (wieder) angewählte Wettbewerbe: deren alten Stand vergessen, sonst käme alles aus der
+    // Zwischenzeit als frische Meldung
+    for (const id of next.competitions) if (!before.competitions.includes(id)) justAdded.add(id);
 
     settings = next;
     saveSettings();
@@ -1056,6 +1196,12 @@ app.whenReady().then(() => {
   log(`Start ${app.getVersion()}${AUTOSTARTED ? ' (Autostart)' : ''}`);
   rebuildGermanIds();
   sound.setErrorHandler((msg) => log('Sound:', msg));
+
+  // Abrufe über Chromiums Netz statt Node: nimmt Windows-Zertifikate (Virenscanner mit HTTPS-Prüfung,
+  // Firmennetz) und den System-Proxy mit. no-store, sonst kämen Spielstände aus dem Cache.
+  const netFetch = (url, opts = {}) => net.fetch(url, { ...opts, cache: 'no-store' });
+  feed.setFetch(netFetch);
+  forward.setFetch(netFetch);
 
   if (app.isPackaged) {
     if (!settings.autostartSet) {
