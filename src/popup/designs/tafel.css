@@ -1,0 +1,61 @@
+/* Design "tafel": das Gehäuse der LED-Anzeigetafel – mattschwarz, eine dünne Kante, sonst nichts.
+   Alles hängt an .tafel, damit sich die Designs nicht gegenseitig verstellen. */
+
+.tafel {
+  width: 404px;
+  height: 142px;
+  margin: 0;
+  padding: 9px 9px 0;
+  background: #151412;
+  border: 1px solid #2c2a26;
+  border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  color: #a8a196;
+  font: 11px/1 'Segoe UI', system-ui, sans-serif;
+  cursor: pointer;
+}
+.tafel.no-link { cursor: default; }
+
+.tafel-board {
+  display: block;
+  border-radius: 1px;
+}
+
+.tafel-plate {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.tafel-foot {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tafel-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tafel-hint { opacity: 0; transition: opacity 120ms; }
+.tafel:hover .tafel-hint { opacity: 1; }
+.tafel.no-link .tafel-hint { display: none; }
+.tafel-page { font-variant-numeric: tabular-nums; }
+
+.tafel-x {
+  appearance: none;
+  width: 20px;
+  height: 18px;
+  margin: 0 -4px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: none;
+  color: #a8a196;
+  font: 16px/1 'Segoe UI', system-ui, sans-serif;
+  cursor: pointer;
+}
+.tafel-x:hover { color: #d8d2c8; background: #24221f; }

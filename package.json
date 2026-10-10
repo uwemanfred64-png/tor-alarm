@@ -1,0 +1,65 @@
+{
+  "name": "tor-alarm",
+  "productName": "Tor-Alarm",
+  "version": "1.1.0",
+  "description": "Meldet jedes Tor der Bundesliga (und weiterer Wettbewerbe) direkt auf dem Windows-Desktop.",
+  "main": "src/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "demo": "electron . --demo",
+    "test": "node --test test/detector.test.js test/feed.test.js test/teams.test.js test/settings.test.js test/texts.test.js test/forward.test.js test/discord.test.js test/tafel.test.js test/ticker.test.js test/sound.test.js test/videotext.test.js",
+    "icon": "node build/make-icon.js",
+    "dist": "node build/make-icon.js && electron-builder --win nsis --x64"
+  },
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^38.8.6",
+    "electron-builder": "^26.15.3"
+  },
+  "author": "Tor-Alarm",
+  "build": {
+    "appId": "de.toralarm.app",
+    "productName": "Tor-Alarm",
+    "copyright": "Tor-Alarm",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Tor-Alarm",
+      "runAfterFinish": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "uninstallDisplayName": "Tor-Alarm",
+      "installerLanguages": [
+        "de_DE"
+      ],
+      "language": "1031",
+      "include": "build/installer.nsh",
+      "artifactName": "Tor-Alarm-Setup-${version}.exe",
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}

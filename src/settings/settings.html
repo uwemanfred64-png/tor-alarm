@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'self'; script-src 'self'">
+<title>Tor-Alarm – Einstellungen</title>
+<link rel="stylesheet" href="settings.css">
+</head>
+<body class="loading">
+
+<div class="tabs" id="tabs" role="tablist">
+  <button type="button" class="tab" role="tab" id="tab-anzeige" aria-controls="page-anzeige" aria-selected="true"><span>Anzeige</span></button>
+  <button type="button" class="tab" role="tab" id="tab-ton" aria-controls="page-ton" aria-selected="false" tabindex="-1"><span>Ton</span></button>
+  <button type="button" class="tab" role="tab" id="tab-teams" aria-controls="page-teams" aria-selected="false" tabindex="-1"><span>Teams</span></button>
+  <button type="button" class="tab" role="tab" id="tab-ereignisse" aria-controls="page-ereignisse" aria-selected="false" tabindex="-1"><span>Ereignisse</span></button>
+  <button type="button" class="tab" role="tab" id="tab-handy" aria-controls="page-handy" aria-selected="false" tabindex="-1"><span>Handy &amp; Discord</span></button>
+  <button type="button" class="tab" role="tab" id="tab-allgemein" aria-controls="page-allgemein" aria-selected="false" tabindex="-1"><span>Allgemein</span></button>
+</div>
+
+<main class="pane">
+
+  <!-- Anzeige -->
+  <section class="page" id="page-anzeige" role="tabpanel" aria-labelledby="tab-anzeige">
+    <fieldset>
+      <legend>Aussehen der Meldung</legend>
+      <div class="options" id="designList"></div>
+      <div class="row sub" id="ledRow">
+        <label class="lbl" for="ledColor">LED-Farbe:</label>
+        <select id="ledColor" class="sel-s"></select>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Position, Größe und Dauer</legend>
+      <div class="row">
+        <label class="lbl" for="position">Position:</label>
+        <select id="position" class="sel-s">
+          <option value="unten-rechts">Unten rechts</option>
+          <option value="oben-rechts">Oben rechts</option>
+          <option value="unten-links">Unten links</option>
+          <option value="oben-links">Oben links</option>
+        </select>
+      </div>
+      <div class="row">
+        <label class="lbl" for="size">Größe:</label>
+        <select id="size" class="sel-s">
+          <option value="100">100 %</option>
+          <option value="125">125 %</option>
+          <option value="150">150 %</option>
+        </select>
+      </div>
+      <div class="row">
+        <label class="lbl" for="duration">Anzeigedauer:</label>
+        <input type="range" id="duration" min="5" max="60" step="1">
+        <input type="number" id="durationNum" class="num" min="5" max="60" step="1" aria-label="Anzeigedauer in Sekunden">
+        <span class="unit">Sekunden</span>
+      </div>
+      <p class="note" id="windowsNote" hidden>Bei der Windows-Benachrichtigung bestimmt Windows selbst, wo und wie lange sie erscheint.</p>
+    </fieldset>
+  </section>
+
+  <!-- Ton -->
+  <section class="page" id="page-ton" role="tabpanel" aria-labelledby="tab-ton" hidden>
+    <fieldset>
+      <legend>Ton</legend>
+      <label class="check"><input type="checkbox" id="sound"><span>Ton abspielen</span></label>
+      <div class="row">
+        <label class="lbl" for="volume">Lautstärke:</label>
+        <input type="range" id="volume" min="0" max="100" step="1">
+        <span class="unit" id="volumeText"></span>
+      </div>
+      <label class="check"><input type="checkbox" id="eventSounds"><span>Pfiff bei Anpfiff, Halbzeit, Abpfiff und Roter Karte</span></label>
+    </fieldset>
+    <fieldset>
+      <legend>Bei Toren</legend>
+      <div class="row">
+        <label class="lbl" for="soundName">Sound:</label>
+        <select id="soundName" class="sel"></select>
+        <button type="button" id="testSound">Anhören</button>
+      </div>
+      <div class="row">
+        <label class="lbl" for="soundFile">Eigene Datei:</label>
+        <input type="text" id="soundFile" class="path" readonly placeholder="(keine Datei gewählt)">
+        <button type="button" id="pickSound">Datei wählen…</button>
+      </div>
+      <div class="err indent" data-err="soundFile"></div>
+    </fieldset>
+    <fieldset>
+      <legend>Bei Toren des Lieblingsvereins</legend>
+      <div class="row">
+        <label class="lbl" for="favoriteSound">Sound:</label>
+        <select id="favoriteSound" class="sel"></select>
+        <button type="button" id="testFavoriteSound">Anhören</button>
+      </div>
+      <div class="row">
+        <label class="lbl" for="favoriteSoundFile">Eigene Datei:</label>
+        <input type="text" id="favoriteSoundFile" class="path" readonly placeholder="(keine Datei gewählt)">
+        <button type="button" id="pickFavoriteSound">Datei wählen…</button>
+      </div>
+      <div class="err indent" data-err="favoriteSoundFile"></div>
+      <p class="note indent" id="noFavorite">Noch kein Lieblingsverein gewählt – das geht unter „Teams“.</p>
+    </fieldset>
+  </section>
+
+  <!-- Teams -->
+  <section class="page" id="page-teams" role="tabpanel" aria-labelledby="tab-teams" hidden>
+    <fieldset>
+      <legend>Wettbewerbe</legend>
+      <div class="comps" id="compGrid"></div>
+      <label class="check"><input type="checkbox" id="germanOnly"><span>Im Europapokal nur Spiele mit deutschen Teams</span></label>
+      <div class="err" data-err="competitions"></div>
+    </fieldset>
+    <fieldset>
+      <legend>Lieblingsverein</legend>
+      <div class="row">
+        <label class="lbl" for="favorite">Verein:</label>
+        <select id="favorite" class="sel"></select>
+      </div>
+      <div class="row" id="concededRow">
+        <span class="lbl">Gegentore:</span>
+        <label class="check"><input type="radio" name="concededMode" value="normal"><span>normal melden</span></label>
+        <label class="check"><input type="radio" name="concededMode" value="leise"><span>leise (ohne Ton)</span></label>
+        <label class="check"><input type="radio" name="concededMode" value="aus"><span>gar nicht</span></label>
+      </div>
+    </fieldset>
+    <fieldset class="grow">
+      <legend>Tore melden von</legend>
+      <label class="check"><input type="radio" name="teamMode" value="alle"><span>allen Teams</span></label>
+      <label class="check"><input type="radio" name="teamMode" value="auswahl"><span>nur diesen Teams:</span></label>
+      <div class="listbox" id="teamList" role="group" aria-label="Teams"></div>
+      <div class="err" data-err="teams"></div>
+    </fieldset>
+  </section>
+
+  <!-- Ereignisse -->
+  <section class="page" id="page-ereignisse" role="tabpanel" aria-labelledby="tab-ereignisse" hidden>
+    <fieldset>
+      <legend>Meldungen</legend>
+      <p>Tore meldet Tor-Alarm immer. Außerdem:</p>
+      <label class="opt"><input type="checkbox" data-event="disallowed"><span class="opt-text"><span class="opt-name">Aberkannte Tore</span><span class="opt-desc">Wenn ein Tor nach Videobeweis zurückgenommen wird.</span></span></label>
+      <label class="opt"><input type="checkbox" data-event="kickoff"><span class="opt-text"><span class="opt-name">Anpfiff</span><span class="opt-desc">Sobald ein Spiel losgeht.</span></span></label>
+      <label class="opt"><input type="checkbox" data-event="halftime"><span class="opt-text"><span class="opt-name">Halbzeit</span><span class="opt-desc">Mit dem Pausenstand.</span></span></label>
+      <label class="opt"><input type="checkbox" data-event="fulltime"><span class="opt-text"><span class="opt-name">Abpfiff</span><span class="opt-desc">Mit dem Endstand.</span></span></label>
+      <label class="opt"><input type="checkbox" data-event="redcard"><span class="opt-text"><span class="opt-name">Rote Karten</span><span class="opt-desc">Auch Gelb-Rot, mit Spieler und Minute.</span></span></label>
+    </fieldset>
+  </section>
+
+  <!-- Handy & Discord -->
+  <section class="page" id="page-handy" role="tabpanel" aria-labelledby="tab-handy" hidden>
+    <fieldset>
+      <legend>Aufs Handy (ntfy)</legend>
+      <p>Mit der kostenlosen App „ntfy“ (Android und iPhone, ohne Anmeldung) kommen die Meldungen als
+        Push-Nachricht aufs Handy: App installieren, auf „+“ tippen, ein Thema abonnieren und denselben
+        Namen hier eintragen.</p>
+      <div class="row">
+        <label class="lbl" for="ntfyTopic">Thema:</label>
+        <input type="text" id="ntfyTopic" class="field" spellcheck="false" autocomplete="off">
+        <button type="button" id="testNtfy">Test senden</button>
+        <span class="result" id="ntfyResult" role="status"></span>
+      </div>
+      <div class="err indent" data-err="ntfyTopic"></div>
+      <p class="indent">Jeder, der den Namen kennt, kann mitlesen – also nichts Naheliegendes wie „tore“
+        nehmen, sondern z. B. „toralarm-k7m2x“.</p>
+    </fieldset>
+    <fieldset>
+      <legend>Discord</legend>
+      <p>Meldungen in einen Discord-Kanal schicken: In Discord beim Kanal „Kanal bearbeiten“ →
+        „Integrationen“ → „Webhooks“ → „Neuer Webhook“, dann „Webhook-URL kopieren“ und hier einfügen.</p>
+      <div class="row">
+        <label class="lbl" for="discordWebhook">Webhook-URL:</label>
+        <input type="text" id="discordWebhook" class="field" spellcheck="false" autocomplete="off">
+        <button type="button" id="testDiscord">Test senden</button>
+        <span class="result" id="discordResult" role="status"></span>
+      </div>
+      <div class="err indent" data-err="discordWebhook"></div>
+    </fieldset>
+    <fieldset>
+      <legend>Weiterleiten</legend>
+      <label class="check"><input type="checkbox" id="onlyFavorite"><span>Nur Spiele des Lieblingsvereins weiterleiten</span></label>
+    </fieldset>
+    <fieldset>
+      <legend>Discord-Profil</legend>
+      <label class="check"><input type="checkbox" id="discordStatus"><span>Im Discord-Profil zeigen, dass ich Tor-Alarm nutze</span></label>
+      <p class="indent">Freunde sehen dann „Schaut Tor-Alarm“ mit dem laufenden Spielstand, dem Liga-Logo und
+        einem Knopf zum Herunterladen. Discord muss dafür auf diesem PC laufen.</p>
+    </fieldset>
+  </section>
+
+  <!-- Allgemein -->
+  <section class="page" id="page-allgemein" role="tabpanel" aria-labelledby="tab-allgemein" hidden>
+    <fieldset>
+      <legend>Start</legend>
+      <label class="check"><input type="checkbox" id="autostart"><span>Mit Windows starten</span></label>
+      <div class="err" data-err="autostart"></div>
+    </fieldset>
+    <fieldset>
+      <legend>Konferenz</legend>
+      <p>Mit diesem Tastenkürzel zeigt Tor-Alarm alle aktuellen Spielstände auf einmal.</p>
+      <div class="row">
+        <label class="lbl" for="hotkey">Tastenkürzel:</label>
+        <input type="text" id="hotkey" class="hotkey" readonly placeholder="Keins" spellcheck="false">
+        <button type="button" id="hotkeyClear">Entfernen</button>
+        <span class="err" data-err="hotkey"></span>
+      </div>
+      <p class="indent">Zum Ändern ins Feld klicken und die neuen Tasten drücken.</p>
+    </fieldset>
+    <fieldset>
+      <legend>Ruhezeit</legend>
+      <div class="row">
+        <label class="check tight"><input type="checkbox" id="quietOn"><span>Keine Meldungen von</span></label>
+        <input type="text" id="quietFrom" class="time" maxlength="5" spellcheck="false" aria-label="Ruhezeit von">
+        <span class="unit">bis</span>
+        <input type="text" id="quietTo" class="time" maxlength="5" spellcheck="false" aria-label="Ruhezeit bis">
+        <span class="unit">Uhr</span>
+        <span class="err" data-err="quiet"></span>
+      </div>
+      <p class="indent">Gilt auch fürs Handy und für Discord. „Stumm schalten“ im Tray-Menü betrifft dagegen nur den PC.</p>
+      <div class="row" id="muteRow" hidden>
+        <span id="muteText"></span>
+        <button type="button" id="unmute">Wieder einschalten</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Über Tor-Alarm</legend>
+      <p id="version">Tor-Alarm</p>
+      <p>Daten: FotMob, Ersatz: OpenLigaDB. Inoffizielles Fan-Projekt.</p>
+    </fieldset>
+  </section>
+
+</main>
+
+<footer class="buttons">
+  <button type="button" id="preview">Vorschau zeigen</button>
+  <span class="status" id="status" role="status"></span>
+  <button type="button" id="ok" class="default">OK</button>
+  <button type="button" id="cancel">Abbrechen</button>
+  <button type="button" id="apply" disabled>Übernehmen</button>
+</footer>
+
+<script src="settings.js"></script>
+</body>
+</html>

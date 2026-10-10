@@ -1,0 +1,286 @@
+/* Design "ticker": ein Eintrag aus dem Liveticker einer Sportseite. Weißes Kästchen, dünner Rahmen,
+   Systemschrift, keine Deko. Alles hängt an .tk, damit nichts mit der Hülle (popup.css) kollidiert. */
+
+.tk,
+.tk * { box-sizing: border-box; }
+
+.tk {
+  display: flex;
+  flex-direction: column;
+  width: 384px;
+  background: #fff;
+  border: 1px solid #c8c8c8;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  color: #1a1a1a;
+  font: 13px/1.35 'Segoe UI', Arial, sans-serif;
+  text-align: left;
+  cursor: default;
+  overflow: hidden;
+  user-select: none;
+}
+/* Der Eintrag ist ein Link aufs Spiel – wie auf der Webseite: Hand und unterstrichene Überschrift */
+.tk-link { cursor: pointer; }
+.tk-link:hover .tk-head { text-decoration: underline; }
+
+/* Messplatz, falls die Hülle beim Aufbau noch versteckt ist */
+.tk-measure {
+  position: absolute;
+  top: 0;
+  left: -10000px;
+  visibility: hidden;
+}
+
+/* Tor des Lieblingsvereins: dicker roter Rand links */
+.tk-fav { border-left: 4px solid #c00000; }
+
+.tk-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  padding: 8px 10px 3px 0;
+}
+
+/* ---- linke Spalte: Minute, darunter was passiert ist */
+
+.tk-side {
+  flex: 0 0 68px;
+  min-width: 0;
+  padding: 0 10px;
+}
+/* der dicke Rand nimmt 3 px mehr – Minute und Text bleiben trotzdem an ihrer Stelle */
+.tk-fav .tk-side { flex-basis: 65px; padding-left: 7px; }
+
+/* Zeilenhöhe wie die Überschrift, damit beide auf einer Grundlinie stehen */
+.tk-min {
+  margin-top: -1px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 19px;
+  white-space: nowrap;
+}
+
+.tk-kind {
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 15px;
+  color: #767676;
+}
+.tk-kind-red { color: #c00000; }
+
+.tk-redcard {
+  display: block;
+  width: 10px;
+  height: 14px;
+  margin-top: 3px;
+  background: #d6001c;
+  border-radius: 1px;
+}
+
+.tk-var {
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 13px;
+  color: #767676;
+}
+
+/* ---- rechte Spalte: Überschrift, Spielstand, Satz */
+
+.tk-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tk-head {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 19px;
+}
+.tk-fav .tk-head { color: #c00000; }
+
+.tk-score {
+  margin-top: 3px;
+  line-height: 18px;
+}
+.tk-team { white-space: nowrap; }
+
+.tk-crest {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+  vertical-align: -3px;
+  object-fit: contain;
+}
+.tk-crest-gone { display: none; }
+.tk-crest-blank,
+.tk-crest-none { visibility: hidden; }
+
+.tk-final {
+  margin-left: 8px;
+  font-weight: 700;
+}
+.tk-prev {
+  margin-left: 8px;
+  color: #8a8a8a;
+}
+
+.tk-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  margin-top: 3px;
+}
+/* Torschütze noch unbekannt: Platz für zwei Zeilen, damit der fertige Satz hineinpasst */
+.tk-wait {
+  min-height: 35px;
+  color: #767676;
+  font-style: italic;
+}
+
+.tk-mline { margin-top: 1px; }
+.tk-score + .tk-mline { margin-top: 3px; }
+
+/* ---- Fußzeile */
+
+.tk-foot {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  height: 24px;
+  padding: 0 3px 0 68px;
+  color: #767676;
+  font-size: 11.5px;
+  line-height: 14px;
+}
+.tk-fav .tk-foot { padding-left: 65px; }
+.tk-conf .tk-foot { padding-left: 10px; border-top: 1px solid #e3e3e3; }
+
+.tk-meta {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tk-x {
+  flex: none;
+  width: 20px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: none;
+  color: #666;
+  font: 17px/18px 'Segoe UI', Arial, sans-serif;
+  cursor: pointer;
+}
+.tk-x:hover { background: #e9e9e9; color: #1a1a1a; }
+
+/* ---- Gegentor im Modus "leise": alles grau und zurückhaltend */
+
+.tk-muted,
+.tk-muted .tk-head,
+.tk-muted .tk-min { color: #6b6b6b; }
+.tk-muted .tk-head { font-weight: 600; }
+.tk-muted .tk-final { font-weight: 600; }
+.tk-muted .tk-crest { filter: grayscale(1); opacity: 0.6; }
+
+/* ---- Konferenz: schlichte Liste */
+
+.tk-chead { padding: 7px 10px 5px; }
+
+.tk-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tk-group {
+  padding: 2px 10px;
+  border-top: 1px solid #e3e3e3;
+  background: #f2f2f2;
+  color: #4a4a4a;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 16px;
+}
+
+.tk-row {
+  display: flex;
+  align-items: center;
+  height: 23px;
+  padding: 0 10px;
+  border-top: 1px solid #ececec;
+}
+.tk-row-link { cursor: pointer; }
+.tk-row-link:hover { background: #f4f4f4; }
+
+.tk-teams {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-width: 0;
+}
+.tk-t {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  min-width: 0;
+}
+.tk-t .tk-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tk-t .tk-crest { flex: none; }
+.tk-dash { flex: none; padding: 0 5px; }
+
+.tk-rc {
+  flex: none;
+  width: 7px;
+  height: 10px;
+  margin-left: 4px;
+  background: #d6001c;
+  border-radius: 1px;
+}
+.tk-rc + .tk-rc { margin-left: 2px; }
+
+.tk-res {
+  flex: none;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.tk-row .tk-res { width: 40px; text-align: right; }
+.tk-rh,
+.tk-ra { display: inline-block; width: 15px; }
+.tk-rh { text-align: right; }
+.tk-ra { text-align: left; }
+.tk-row-pre .tk-res { color: #8a8a8a; font-weight: 400; }
+
+.tk-state {
+  flex: none;
+  width: 54px;
+  font-size: 12px;
+  color: #767676;
+  text-align: right;
+  white-space: nowrap;
+}
+.tk-state-live { color: #c00000; }
+
+.tk-more,
+.tk-empty {
+  padding: 3px 10px 4px;
+  border-top: 1px solid #ececec;
+  color: #767676;
+  font-size: 12px;
+}
+.tk-empty { color: #1a1a1a; font-size: 13px; }

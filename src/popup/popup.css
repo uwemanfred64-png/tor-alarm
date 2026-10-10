@@ -1,0 +1,24 @@
+/* Hülle für alle Designs: durchsichtiges Fenster, 8 px Rand rundum (Platz für den Schatten).
+   Wie das Popup aussieht, bestimmt das Design (designs/*.css). */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  user-select: none;
+}
+
+body {
+  padding: 8px;
+  font: 11px/1 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Kurz einblenden, beim Schließen kurz ausblenden – nur Deckkraft und ein paar Pixel Versatz. */
+#root.in { animation: ta-in 180ms ease-out both; }
+#root.leaving { animation: ta-out 160ms ease-in both; pointer-events: none; }
+
+@keyframes ta-in { from { opacity: 0; transform: translateY(6px); } }
+@keyframes ta-out { to { opacity: 0; transform: translateY(2px); } }
